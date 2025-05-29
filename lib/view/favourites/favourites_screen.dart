@@ -1,75 +1,125 @@
-import 'package:flutter/material.dart';
-import 'favourite_detail_screen.dart'; // Import the detail screen
+import 'dart:convert';
 
-class FavouritesScreen extends StatelessWidget {
-  final String? userId;
-  const FavouritesScreen({super.key, required this.userId});
+import 'package:do_host/services/session_manager/session_controller.dart';
+import 'package:do_host/utils/app_url.dart';
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+
+import 'favourite_detail_screen.dart';
+
+class FavouritesScreen extends StatefulWidget {
+  // final String userId;
+
+  const FavouritesScreen({super.key});
+
+  @override
+  State<FavouritesScreen> createState() => _FavouritesScreenState();
+}
+
+class _FavouritesScreenState extends State<FavouritesScreen> {
+  List<dynamic> notifications = [];
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchNotifications();
+  }
+
+  Future<void> fetchNotifications() async {
+    try {
+      final token = await SessionController().getToken();
+      final userId = await SessionController().getUserId();
+      if (token == null) throw Exception('No token found');
+
+      final url = '${AppUrl.baseUrl}/notifications/${userId}';
+      final headers = {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      };
+
+      final response = await http.get(Uri.parse(url), headers: headers);
+
+      if (response.statusCode == 200) {
+        final List<dynamic> responseData = json.decode(response.body);
+        setState(() {
+          notifications = responseData;
+          isLoading = false;
+        });
+      } else {
+        throw Exception('Failed to load notifications');
+      }
+    } catch (e) {
+      debugPrint("Error fetching notifications: $e");
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  String formatTimeAgo(String timestamp) {
+    final now = DateTime.now().toUtc();
+    final createdAt = DateTime.parse(timestamp).toUtc();
+    final diff = now.difference(createdAt);
+
+    if (diff.inSeconds < 60) return 'just now';
+    if (diff.inMinutes < 60) {
+      return '${diff.inMinutes} minute${diff.inMinutes == 1 ? '' : 's'} ago';
+    }
+    if (diff.inHours < 24) {
+      return '${diff.inHours} hour${diff.inHours == 1 ? '' : 's'} ago';
+    }
+    if (diff.inDays == 1) return 'yesterday';
+    return '${diff.inDays} days ago';
+  }
+
+  Color getColorByType(String type) {
+    switch (type) {
+      case 'like':
+        return Colors.blue;
+      case 'comment':
+        return Colors.green;
+      case 'follow':
+        return Colors.purple;
+      default:
+        return Colors.grey;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final double contentWidth = MediaQuery.of(context).size.width;
+    final double maxContentWidth = contentWidth < 600
+        ? contentWidth
+        : contentWidth < 1100
+        ? 600
+        : 800;
+
     return Scaffold(
-      body: Padding(
-        padding: EdgeInsets.symmetric(vertical: 3, horizontal: 8),
-        child: ListView(
-          children: [
-            _buildFavouriteCard(
-              context,
-              title: 'New Comment on Your Post',
-              description: 'John Doe commented on your post.',
-              timestamp: '5 minutes ago',
-              color: Colors.blue,
-            ),
-            _buildFavouriteCard(
-              context,
-              title: 'Action Completed Successfully',
-              description: 'Your account has been verified.',
-              timestamp: '1 hour ago',
-              color: Colors.green,
-            ),
-            _buildFavouriteCard(
-              context,
-              title: 'Error with Your Request',
-              description: 'There was an issue processing your payment.',
-              timestamp: '3 hours ago',
-              color: Colors.red,
-            ),
-            _buildFavouriteCard(
-              context,
-              title: 'App Update Available',
-              description:
-                  'A new version of the app is available for download.',
-              timestamp: 'Yesterday',
-              color: Colors.orange,
-            ),
-            _buildFavouriteCard(
-              context,
-              title: 'New Message Received',
-              description: 'You have received a new message from Sarah.',
-              timestamp: '2 days ago',
-              color: Colors.purple,
-            ),
-            _buildFavouriteCard(
-              context,
-              title: 'Upcoming Event',
-              description: 'Don’t forget the meeting tomorrow at 10:00 AM.',
-              timestamp: '3 days ago',
-              color: Colors.teal,
-            ),
-            _buildFavouriteCard(
-              context,
-              title: 'New Follower',
-              description: 'Alice started following you.',
-              timestamp: '4 days ago',
-              color: Colors.pink,
-            ),
-            _buildFavouriteCard(
-              context,
-              title: 'Promotion Alert',
-              description: 'Get 20% off your next purchase!',
-              timestamp: '5 days ago',
-              color: Colors.amber,
-            ),
-          ],
+      body: Center(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: maxContentWidth),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+            child: isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : notifications.isEmpty
+                ? const Center(child: Text('No notifications'))
+                : ListView.builder(
+                    itemCount: notifications.length,
+                    itemBuilder: (context, index) {
+                      final notification = notifications[index];
+                      return _buildFavouriteCard(
+                        context,
+                        description: notification['message'] ?? '',
+                        timestamp: notification['created_at'] != null
+                            ? formatTimeAgo(notification['created_at'])
+                            : '',
+                        color: getColorByType(notification['type'] ?? ''),
+                      );
+                    },
+                  ),
+          ),
         ),
       ),
     );
@@ -77,19 +127,16 @@ class FavouritesScreen extends StatelessWidget {
 
   Widget _buildFavouriteCard(
     BuildContext context, {
-    required String title,
     required String description,
     required String timestamp,
     required Color color,
   }) {
     return GestureDetector(
       onTap: () {
-        // Navigate to the detail screen when the card is tapped
         Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => FavouriteDetailScreen(
-              title: title,
               description: description,
               timestamp: timestamp,
             ),
@@ -98,7 +145,7 @@ class FavouritesScreen extends StatelessWidget {
       },
       child: Card(
         color: Colors.white,
-        margin: const EdgeInsets.symmetric(horizontal: 1, vertical: 2),
+        margin: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
         elevation: 3,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         child: Padding(
@@ -107,14 +154,9 @@ class FavouritesScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
+                getShortText(description), // `description` is your full string
+                style: TextStyle(fontSize: 16),
               ),
-              const SizedBox(height: 8),
-              Text(description),
               const SizedBox(height: 8),
               Text(
                 timestamp,
@@ -126,4 +168,18 @@ class FavouritesScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+String getShortText(String text) {
+  const keyword = "your post";
+  final lowerText = text.toLowerCase();
+  final keywordIndex = lowerText.indexOf(keyword);
+
+  if (keywordIndex != -1) {
+    // Include 'your post' fully
+    final endIndex = keywordIndex + keyword.length;
+    return '${text.substring(0, endIndex)}...';
+  }
+
+  return text;
 }

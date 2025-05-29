@@ -24,7 +24,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     _resetPasswordBloc = ResetPasswordBloc(resetPasswordApiRepository: getIt());
 
     // Print to verify if email is received
-    print("Received email in VerifyOtpScreen: ${widget.email}");
+    print("Received email in ResetPasswordScreen: ${widget.email}");
 
     // Dispatch email to BLoC after the first frame
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -44,30 +44,46 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       create: (_) => _resetPasswordBloc,
       child: Scaffold(
         body: SafeArea(
-          child: SingleChildScrollView(
-            child: Center(
-              child: Form(
-                key: _formKey,
-                child: Padding(
-                  padding: const EdgeInsets.all(8),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      const SizedBox(height: 35),
-                      const AppIcon(),
-                      const WelcomeText(),
-                      const SizedBox(height: 20),
-                      const OTPInputWidget(),
-                      const PasswordInputWidget(),
-                      const ConfirmPasswordInputWidget(),
-                      const SizedBox(height: 20),
-                      SubmitButton(formKey: _formKey),
-                    ],
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              double contentWidth = constraints.maxWidth;
+              double maxContentWidth;
+
+              if (contentWidth < 600) {
+                maxContentWidth = contentWidth; // Mobile
+              } else if (contentWidth < 1100) {
+                maxContentWidth = 600; // Tablet/Web Small
+              } else {
+                maxContentWidth = 800; // Desktop/Web Large
+              }
+
+              return SingleChildScrollView(
+                child: Center(
+                  child: Container(
+                    width: maxContentWidth,
+                    padding: const EdgeInsets.all(16),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          const SizedBox(height: 35),
+                          const AppIcon(),
+                          const WelcomeText(),
+                          const SizedBox(height: 20),
+                          const OTPInputWidget(),
+                          const PasswordInputWidget(),
+                          const ConfirmPasswordInputWidget(),
+                          const SizedBox(height: 20),
+                          SubmitButton(formKey: _formKey),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ),
+              );
+            },
           ),
         ),
       ),

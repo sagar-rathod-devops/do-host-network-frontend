@@ -19,29 +19,66 @@ class UserStatsWidget extends StatelessWidget {
             return const Center(child: CircularProgressIndicator());
           }
 
-          if (state.error != null) {
-            return Center(child: Text("Error: ${state.error}"));
-          }
+          final hasData = state.error == null;
 
           return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 8),
             child: Column(
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    _buildStatCard("Followers", state.followers),
-                    _buildStatCard("Following", state.followings),
-                    _buildStatCard("Posts", state.posts),
-                  ],
+                Card(
+                  color: Colors.white,
+                  margin: const EdgeInsets.symmetric(vertical: 2),
+                  elevation: 3,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        _buildStatCard(
+                          "Followers",
+                          hasData ? state.followers : 0,
+                        ),
+                        _buildStatCard(
+                          "Following",
+                          hasData ? state.followings : 0,
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    _buildStatCard("Likes", state.likes),
-                    _buildStatCard("Comments", state.comments),
-                  ],
+                const SizedBox(height: 12),
+                Card(
+                  color: Colors.white,
+                  margin: const EdgeInsets.symmetric(vertical: 2),
+                  elevation: 3,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        _buildStatCard("Posts", hasData ? state.posts : 0),
+                        const VerticalDivider(thickness: 1),
+                        _buildStatCard("Likes", hasData ? state.likes : 0),
+                        const VerticalDivider(thickness: 1),
+                        _buildStatCard(
+                          "Comments",
+                          hasData ? state.comments : 0,
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -53,6 +90,7 @@ class UserStatsWidget extends StatelessWidget {
 
   Widget _buildStatCard(String title, int count) {
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Text(
           '$count',

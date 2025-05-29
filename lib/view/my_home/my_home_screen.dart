@@ -1,15 +1,14 @@
+import 'package:flutter/material.dart';
 import 'package:do_host/view/favourites/favourites_screen.dart';
 import 'package:do_host/view/home/home_screen.dart';
-import 'package:do_host/view/my_home/widget/logout_button_widget.dart';
-import 'package:do_host/view/profile/profile_screen.dart';
-// import 'package:do_host/view/profile/profile_screen.dart';
-import 'package:do_host/view/search/search_screen.dart';
 import 'package:do_host/view/job/job_screen.dart';
-import 'package:flutter/material.dart';
+import 'package:do_host/view/my_home/widget/logout_button_widget.dart';
+import 'package:do_host/view/post/choose_post_type_screen.dart';
+import 'package:do_host/view/profile/profile_screen.dart';
+import 'package:do_host/view/search/search_screen.dart';
 
 import '../../configs/color/color.dart';
 import '../../services/session_manager/session_controller.dart';
-import '../post/choose_post_type_screen.dart';
 
 class MyHomeScreen extends StatefulWidget {
   const MyHomeScreen({super.key});
@@ -30,19 +29,23 @@ class _MyHomeScreenState extends State<MyHomeScreen> {
   }
 
   Future<void> _loadUserId() async {
-    String? id = await SessionController().getUserId();
-    setState(() {
-      userId = id;
+    final id = await SessionController().getUserId();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        setState(() => userId = id);
+      }
     });
   }
 
-  List<Widget> get _pages => [
-    HomeScreen(userId: userId),
-    JobsScreen(userId: userId),
-    SearchScreen(userId: userId),
-    FavouritesScreen(userId: userId),
-    ProfileScreen(userId: userId),
-  ];
+  List<Widget> get _pages => userId == null
+      ? []
+      : [
+          HomeScreen(userId: userId),
+          JobsScreen(userId: userId),
+          SearchScreen(userId: userId),
+          FavouritesScreen(),
+          ProfileScreen(userId: userId),
+        ];
 
   void _onItemTapped(int index) {
     setState(() {
@@ -50,6 +53,46 @@ class _MyHomeScreenState extends State<MyHomeScreen> {
       pageController.jumpToPage(index);
     });
   }
+
+  BottomNavigationBar get _bottomNavigationBar => BottomNavigationBar(
+    currentIndex: _selectedIndex,
+    onTap: _onItemTapped,
+    backgroundColor: AppColors.buttonColor,
+    selectedItemColor: Colors.white,
+    unselectedItemColor: const Color(0xFFF5F5F5),
+    selectedFontSize: 12,
+    unselectedFontSize: 10,
+    selectedIconTheme: const IconThemeData(size: 28),
+    unselectedIconTheme: const IconThemeData(size: 20),
+    type: BottomNavigationBarType.fixed,
+    items: const [
+      BottomNavigationBarItem(
+        icon: Icon(Icons.home_outlined),
+        activeIcon: Icon(Icons.home),
+        label: 'Home',
+      ),
+      BottomNavigationBarItem(
+        icon: Icon(Icons.work_outline),
+        activeIcon: Icon(Icons.work),
+        label: 'Jobs',
+      ),
+      BottomNavigationBarItem(
+        icon: Icon(Icons.search),
+        activeIcon: Icon(Icons.search_rounded),
+        label: 'Search',
+      ),
+      BottomNavigationBarItem(
+        icon: Icon(Icons.favorite_border_outlined),
+        activeIcon: Icon(Icons.favorite),
+        label: 'Favourites',
+      ),
+      BottomNavigationBarItem(
+        icon: Icon(Icons.account_circle_outlined),
+        activeIcon: Icon(Icons.account_circle),
+        label: 'Profile',
+      ),
+    ],
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -76,16 +119,17 @@ class _MyHomeScreenState extends State<MyHomeScreen> {
           ),
         ),
         actions: [
-          // Add a button to navigate to the PostScreen
           IconButton(
             icon: const Icon(Icons.add, color: AppColors.whiteColor),
             onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ChoosePostTypeScreen(userId: userId),
-                ),
-              );
+              if (userId != null) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ChoosePostTypeScreen(userId: userId),
+                  ),
+                );
+              }
             },
           ),
           const SizedBox(width: 25),
@@ -96,81 +140,36 @@ class _MyHomeScreenState extends State<MyHomeScreen> {
       ),
       body: userId == null
           ? const Center(child: CircularProgressIndicator())
-          : PageView(
-              controller: pageController,
-              physics: const NeverScrollableScrollPhysics(),
-              children: _pages,
+          : LayoutBuilder(
+              builder: (context, constraints) {
+                final bool isDesktop = constraints.maxWidth >= 800;
+
+                return isDesktop
+                    ? Column(
+                        children: [
+                          _bottomNavigationBar, // Show on top
+                          Expanded(
+                            child: PageView(
+                              controller: pageController,
+                              physics: const NeverScrollableScrollPhysics(),
+                              children: _pages,
+                            ),
+                          ),
+                        ],
+                      )
+                    : PageView(
+                        controller: pageController,
+                        physics: const NeverScrollableScrollPhysics(),
+                        children: _pages,
+                      );
+              },
             ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
-        backgroundColor: Colors.deepOrangeAccent,
-        selectedItemColor: Colors.white,
-        unselectedItemColor: Color(0xFFF5F5F5),
-        selectedFontSize: 12,
-        unselectedFontSize: 10,
-        selectedIconTheme: IconThemeData(size: 28),
-        unselectedIconTheme: IconThemeData(size: 20),
-        type: BottomNavigationBarType.fixed,
-        items: [
-          BottomNavigationBarItem(
-            icon: Icon(_selectedIndex == 0 ? Icons.home : Icons.home_outlined),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(_selectedIndex == 1 ? Icons.work : Icons.work_outline),
-            label: 'Jobs',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(
-              _selectedIndex == 2 ? Icons.search_rounded : Icons.search,
-            ),
-            label: 'Search',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(
-              _selectedIndex == 3
-                  ? Icons.favorite
-                  : Icons.favorite_border_outlined,
-            ),
-            label: 'Favourites',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(
-              _selectedIndex == 4
-                  ? Icons.account_circle
-                  : Icons.account_circle_outlined,
-            ),
-            label: 'Profile',
-          ),
-        ],
+      bottomNavigationBar: LayoutBuilder(
+        builder: (context, constraints) {
+          final bool isDesktop = constraints.maxWidth >= 800;
+          return isDesktop ? const SizedBox.shrink() : _bottomNavigationBar;
+        },
       ),
     );
   }
-
-  // Widget _buildNavItem(IconData icon, String label, int index) {
-  //   return GestureDetector(
-  //     onTap: () => _onItemTapped(index),
-  //     child: Column(
-  //       mainAxisSize: MainAxisSize.min,
-  //       mainAxisAlignment: MainAxisAlignment.center,
-  //       children: [
-  //         Icon(
-  //           icon,
-  //           size: 22, // Reduced icon size
-  //           color: _selectedIndex == index ? Colors.white : const Color(0xFFF5F5F5),
-  //         ),
-  //         if (_selectedIndex == index)
-  //           Text(
-  //             label,
-  //             style: const TextStyle(
-  //               fontSize: 10, // Smaller font
-  //               color: Colors.white,
-  //               fontWeight: FontWeight.bold,
-  //             ),
-  //           ),
-  //       ],
-  //     ),
-  //   );
-  // }
 }

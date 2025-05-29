@@ -18,7 +18,6 @@ class _SignupScreenState extends State<SignupScreen> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     _registerBloc = RegisterBloc(registerApiRepository: getIt());
   }
@@ -35,36 +34,44 @@ class _SignupScreenState extends State<SignupScreen> {
       body: BlocProvider(
         create: (_) => _registerBloc,
         child: SafeArea(
-          child: SingleChildScrollView(
-            child: Center(
-              child: Form(
-                key: _formKey,
-                child: Padding(
-                  padding: const EdgeInsets.all(8),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: <Widget>[
-                      const SizedBox(height: 35),
-                      const AppIcon(),
-                      const WelcomeText(),
-                      const SizedBox(height: 20),
-                      const UsernameInputWidget(),
-                      const EmailInputWidget(), // Widget for email input field
-                      const PasswordInputWidget(), // Widget for password input field
-                      const ConfirmPasswordInputWidget(),
-                      const SizedBox(
-                        height: 20,
-                      ), // Space between fields and submit button
-                      SubmitButton(
-                        formKey: _formKey,
-                      ), // Widget for submit button
-                      const SignupRedirectText(),
-                    ],
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              double contentWidth = constraints.maxWidth;
+              double maxContentWidth = contentWidth < 600
+                  ? contentWidth // Mobile
+                  : contentWidth < 1100
+                  ? 600 // Tablet/Web Small
+                  : 800; // Desktop/Web Large
+
+              return SingleChildScrollView(
+                child: Center(
+                  child: Container(
+                    width: maxContentWidth,
+                    padding: const EdgeInsets.all(16),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: <Widget>[
+                          const SizedBox(height: 35),
+                          const AppIcon(),
+                          const WelcomeText(),
+                          const SizedBox(height: 20),
+                          const UsernameInputWidget(),
+                          const EmailInputWidget(),
+                          const PasswordInputWidget(),
+                          const ConfirmPasswordInputWidget(),
+                          const SizedBox(height: 20),
+                          SubmitButton(formKey: _formKey),
+                          const SignupRedirectText(),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ),
+              );
+            },
           ),
         ),
       ),

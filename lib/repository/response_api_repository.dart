@@ -8,6 +8,49 @@ import '../../data/network/network_api_services.dart';
 class ResponseApiRepository {
   final NetworkApiService _apiService = NetworkApiService();
 
+  Future<void> sendNotification({
+    required String receiverId,
+    required String message,
+    required String type,
+    required String postId,
+  }) async {
+    try {
+      final token = await SessionController().getToken();
+      final senderId = await SessionController()
+          .getUserId(); // You must implement this
+
+      if (token == null) throw Exception('No token found in session');
+      if (senderId == null)
+        throw Exception('No sender user ID found in session');
+
+      final url = "${AppUrl.baseUrl}/notifications/create";
+      final headers = {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      };
+
+      final body = {
+        "recipient_user_id": receiverId,
+        "sender_user_id": senderId,
+        "type": type,
+        "entity_id": postId,
+        "entity_type": "post",
+        "message": message,
+      };
+
+      print('[sendNotification][REQUEST] URL: $url');
+      print('[sendNotification][REQUEST] Headers: $headers');
+      print('[sendNotification][REQUEST] Body: $body');
+
+      final response = await _apiService.postApi(url, body, headers: headers);
+
+      print('[sendNotification][RESPONSE] $response');
+    } catch (e) {
+      print('[sendNotification][ERROR] Failed to send notification: $e');
+      rethrow;
+    }
+  }
+
   Future<void> likePost(String postId) async {
     try {
       final token = await SessionController().getToken();
@@ -159,83 +202,100 @@ class ResponseApiRepository {
   }
 
   Future<int> getFollowersCount(String userId) async {
-    final token = await SessionController().getToken();
-    final url = "${AppUrl.baseUrl}/user/$userId/followers";
-    final headers = {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer $token',
-    };
+    try {
+      final token = await SessionController().getToken();
+      final url = "${AppUrl.baseUrl}/user/$userId/followers";
+      final headers = {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      };
 
-    final response = await _apiService.getApi(url, headers: headers);
-    final followers = response['followers'];
+      final response = await _apiService.getApi(url, headers: headers);
+      final followers = response['followers'];
 
-    if (followers == null) return 0;
-    if (followers is List) return followers.length;
-
+      if (followers == null) return 0;
+      if (followers is List) return followers.length;
+    } catch (e) {
+      debugPrint("Followers error: $e");
+    }
     return 0;
   }
 
   Future<int> getFollowingsCount(String userId) async {
-    final token = await SessionController().getToken();
-    final url = "${AppUrl.baseUrl}/user/$userId/followings";
-    final headers = {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer $token',
-    };
+    try {
+      final token = await SessionController().getToken();
+      final url = "${AppUrl.baseUrl}/user/$userId/followings";
+      final headers = {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      };
 
-    final response = await _apiService.getApi(url, headers: headers);
-    final followings = response['followings'];
+      final response = await _apiService.getApi(url, headers: headers);
+      final followings = response['followings'];
 
-    if (followings == null) return 0;
-    if (followings is List) return followings.length;
-
+      if (followings == null) return 0;
+      if (followings is List) return followings.length;
+    } catch (e) {
+      debugPrint("Followings error: $e");
+    }
     return 0;
   }
 
   Future<List<dynamic>> getUserPosts(String userId) async {
-    final token = await SessionController().getToken();
-    final url = "${AppUrl.baseUrl}/posts/user/$userId";
-    final headers = {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer $token',
-    };
+    try {
+      final token = await SessionController().getToken();
+      final url = "${AppUrl.baseUrl}/posts/user/$userId";
+      final headers = {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      };
 
-    final response = await _apiService.getApi(url, headers: headers);
-    if (response is List) return response;
+      final response = await _apiService.getApi(url, headers: headers);
+      if (response is List) return response;
+    } catch (e) {
+      debugPrint("User posts error: $e");
+    }
     return [];
   }
 
-  // ✅ NEW: Get total likes for a post
   Future<int> getPostLikesCount(String postId) async {
-    final token = await SessionController().getToken();
-    final url = "${AppUrl.baseUrl}/post/$postId/likes";
-    final headers = {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer $token',
-    };
+    try {
+      final token = await SessionController().getToken();
+      final url = "${AppUrl.baseUrl}/post/$postId/likes";
+      final headers = {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      };
 
-    final response = await _apiService.getApi(url, headers: headers);
-    final likes = response['likes'];
+      final response = await _apiService.getApi(url, headers: headers);
+      final likes = response['likes'];
 
-    if (likes is List) return likes.length;
+      if (likes is List) return likes.length;
+    } catch (e) {
+      debugPrint("Likes error: $e");
+    }
     return 0;
   }
 
-  // ✅ NEW: Get total comments for a post
   Future<int> getPostCommentsCount(String postId) async {
-    final token = await SessionController().getToken();
-    final url = "${AppUrl.baseUrl}/post/$postId/comments";
-    final headers = {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer $token',
-    };
+    try {
+      final token = await SessionController().getToken();
+      final url = "${AppUrl.baseUrl}/post/$postId/comments";
+      final headers = {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      };
 
-    final response = await _apiService.getApi(url, headers: headers);
-    final comments = response['comments'];
+      final response = await _apiService.getApi(url, headers: headers);
+      final comments = response['comments'];
 
-    if (comments is List) return comments.length;
+      if (comments is List) return comments.length;
+    } catch (e) {
+      debugPrint("Comments error: $e");
+    }
     return 0;
   }
+
   // ========================= DELETE APIs =========================
 
   Future<void> deleteUserVideo(String videoId) async {

@@ -82,9 +82,9 @@ class Routes {
         );
 
       case RoutesName.favourites:
-        final userId = settings.arguments as String;
+        // final userId = settings.arguments as String;
         return MaterialPageRoute(
-          builder: (BuildContext context) => FavouritesScreen(userId: userId),
+          builder: (BuildContext context) => FavouritesScreen(),
         );
 
       default:

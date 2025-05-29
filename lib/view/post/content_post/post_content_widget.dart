@@ -44,35 +44,49 @@ class _PostContentWidgetState extends State<PostContentWidget> {
         appBar: AppBar(
           title: const Text(
             'Post Your Content',
-            style: TextStyle(color: Colors.white), // white title text
+            style: TextStyle(color: Colors.white),
           ),
-          backgroundColor: AppColors.buttonColor, // deep orange background
-          iconTheme: const IconThemeData(
-            color: Colors.white,
-          ), // back icon color
+          backgroundColor: AppColors.buttonColor,
+          iconTheme: const IconThemeData(color: Colors.white),
         ),
         body: SafeArea(
-          child: SingleChildScrollView(
-            child: Center(
-              child: Form(
-                key: _formKey,
-                child: Padding(
-                  padding: const EdgeInsets.all(8),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      const SizedBox(height: 35),
-                      PostContentInputWidget(),
-                      const SizedBox(height: 20),
-                      MediaUrlWidget(),
-                      const SizedBox(height: 20),
-                      PostSubmitButton(formKey: _formKey),
-                    ],
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              double contentWidth = constraints.maxWidth;
+              double maxContentWidth;
+
+              if (contentWidth < 600) {
+                maxContentWidth = contentWidth; // Mobile
+              } else if (contentWidth < 1100) {
+                maxContentWidth = 600; // Tablet/Web Small
+              } else {
+                maxContentWidth = 800; // Desktop/Web Large
+              }
+
+              return SingleChildScrollView(
+                child: Center(
+                  child: Container(
+                    width: maxContentWidth,
+                    padding: const EdgeInsets.all(16),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          SizedBox(height: 35),
+                          PostContentInputWidget(),
+                          SizedBox(height: 20),
+                          MediaUrlWidget(),
+                          SizedBox(height: 20),
+                          PostSubmitButton(formKey: _formKey),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ),
+              );
+            },
           ),
         ),
       ),

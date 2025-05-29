@@ -23,8 +23,10 @@ class _JobPostWidgetState extends State<JobPostWidget> {
     super.initState();
     _postJobBloc = PostJobBloc(postJobApiRepository: getIt());
 
-    // Corrected: Use named parameter for userId
-    _postJobBloc.add(UserIdChanged(userId: widget.userId!));
+    // Use named parameter for userId safely
+    if (widget.userId != null) {
+      _postJobBloc.add(UserIdChanged(userId: widget.userId!));
+    }
   }
 
   @override
@@ -47,35 +49,51 @@ class _JobPostWidgetState extends State<JobPostWidget> {
       body: BlocProvider(
         create: (_) => _postJobBloc,
         child: SafeArea(
-          child: SingleChildScrollView(
-            child: Center(
-              child: Form(
-                key: _formKey,
-                child: Padding(
-                  padding: const EdgeInsets.all(8),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: <Widget>[
-                      const SizedBox(height: 20),
-                      JobTitleWidget(),
-                      const SizedBox(height: 10),
-                      CompanyNameWidget(),
-                      const SizedBox(height: 10),
-                      JobLocationWidget(),
-                      const SizedBox(height: 10),
-                      JobDescriptionWidget(),
-                      const SizedBox(height: 10),
-                      ApplyUrlWidget(),
-                      const SizedBox(height: 10),
-                      LastDateWidget(),
-                      const SizedBox(height: 20),
-                      JobSubmitButton(formKey: _formKey),
-                    ],
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              double contentWidth = constraints.maxWidth;
+              double maxContentWidth;
+
+              if (contentWidth < 600) {
+                maxContentWidth = contentWidth; // Mobile
+              } else if (contentWidth < 1100) {
+                maxContentWidth = 600; // Tablet/Web Small
+              } else {
+                maxContentWidth = 800; // Desktop/Web Large
+              }
+
+              return SingleChildScrollView(
+                child: Center(
+                  child: Container(
+                    width: maxContentWidth,
+                    padding: const EdgeInsets.all(16),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: <Widget>[
+                          const SizedBox(height: 20),
+                          const JobTitleWidget(),
+                          const SizedBox(height: 10),
+                          const CompanyNameWidget(),
+                          const SizedBox(height: 10),
+                          const JobLocationWidget(),
+                          const SizedBox(height: 10),
+                          const JobDescriptionWidget(),
+                          const SizedBox(height: 10),
+                          const ApplyUrlWidget(),
+                          const SizedBox(height: 10),
+                          const LastDateWidget(),
+                          const SizedBox(height: 20),
+                          JobSubmitButton(formKey: _formKey),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ),
+              );
+            },
           ),
         ),
       ),

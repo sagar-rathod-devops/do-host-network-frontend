@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:bloc/bloc.dart';
+import 'package:do_host/services/session_manager/session_controller.dart';
 import 'package:equatable/equatable.dart';
 
 import '../../data/response/api_response.dart';
@@ -39,11 +40,14 @@ class UserProfileBloc extends Bloc<UserProfileEvent, UserProfileState> {
     emit(state.copyWith(profileImage: event.profileImage));
   }
 
-  void _onFullNameChanged(
+  Future<void> _onFullNameChanged(
     FullNameChanged event,
     Emitter<UserProfileState> emit,
-  ) {
+  ) async {
     emit(state.copyWith(fullName: event.fullName));
+
+    // Save the full name using SessionController
+    await SessionController().saveFullName(event.fullName);
   }
 
   void _onDesignationChanged(

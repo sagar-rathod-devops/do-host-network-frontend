@@ -5,6 +5,7 @@ import 'package:do_host/bloc/user_video_bloc/user_video_bloc.dart';
 import 'package:do_host/bloc/user_video_get_bloc/user_video_get_bloc.dart';
 import 'package:do_host/configs/routes/routes_name.dart';
 import 'package:do_host/repository/response_api_repository.dart';
+import 'package:do_host/services/session_manager/session_controller.dart';
 import 'package:do_host/view/profile/user_education/user_education_widget.dart';
 import 'package:do_host/view/profile/user_experience/user_experience_widget.dart';
 import 'package:do_host/view/profile/user_profile/user_profile_update_widget.dart';
@@ -208,6 +209,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final double contentWidth = MediaQuery.of(context).size.width;
+
+    // Responsive width for different platforms
+    double maxContentWidth = contentWidth < 600
+        ? contentWidth // Mobile
+        : contentWidth < 1100
+        ? 600 // Tablet/Web Small
+        : 800; // Desktop/Web Large
+
     return MultiBlocProvider(
       providers: [
         BlocProvider(
@@ -224,172 +234,175 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ],
       child: Scaffold(
         appBar: const VideoAppBar(), // ✅ Now has access to both blocs
-        body: SingleChildScrollView(
-          child: Column(
-            children: [
-              /// USER PROFILE SECTION
-              /// USER PROFILE SECTION
-              BlocBuilder<UserProfileGetBloc, UserProfileGetState>(
-                buildWhen: (previous, current) =>
-                    previous.userProfileGetList != current.userProfileGetList,
-                builder: (context, state) {
-                  final status = state.userProfileGetList.status;
-                  final profile = state.userProfileGetList.data;
+        body: Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: maxContentWidth),
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  /// USER PROFILE SECTION
+                  BlocBuilder<UserProfileGetBloc, UserProfileGetState>(
+                    buildWhen: (previous, current) =>
+                        previous.userProfileGetList !=
+                        current.userProfileGetList,
+                    builder: (context, state) {
+                      final status = state.userProfileGetList.status;
+                      final profile = state.userProfileGetList.data;
 
-                  // Debug print to check profile data
-                  debugPrint("User Profile data: $profile");
+                      debugPrint("User Profile data: $profile");
 
-                  if (status == Status.loading) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
+                      if (status == Status.loading) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
 
-                  if (status == Status.error || profile == null) {
-                    return _buildAddUserProfileCard(
-                      context,
-                      "No Profile Data Available",
-                      Icons.person_outline,
-                    );
-                  }
-
-                  return _buildUserProfileCard(profile);
-                },
-              ),
-
-              /// EDUCATION SECTION
-              const SizedBox(height: 2),
-              UserStatsWidget(userId: widget.userId!),
-              const SizedBox(height: 2),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      "Education",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.add, color: Colors.blue),
-                      onPressed: () {
-                        Navigator.push(
+                      if (status == Status.error || profile == null) {
+                        return _buildAddUserProfileCard(
                           context,
-                          MaterialPageRoute(
-                            builder: (_) =>
-                                UserEducationWidget(userId: widget.userId!),
-                          ),
+                          "No Profile Data Available",
+                          Icons.person_outline,
                         );
-                      },
+                      }
+
+                      return _buildUserProfileCard(profile);
+                    },
+                  ),
+
+                  const SizedBox(height: 2),
+                  UserStatsWidget(userId: widget.userId!),
+                  const SizedBox(height: 2),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          "Education",
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.add, color: Colors.blue),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    UserEducationWidget(userId: widget.userId!),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              ),
+                  ),
 
-              BlocBuilder<UserEducationGetBloc, UserEducationGetState>(
-                buildWhen: (previous, current) =>
-                    previous.userEducationGetList !=
-                    current.userEducationGetList,
-                builder: (context, state) {
-                  if (state.userEducationGetList.status == Status.loading) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
+                  BlocBuilder<UserEducationGetBloc, UserEducationGetState>(
+                    buildWhen: (previous, current) =>
+                        previous.userEducationGetList !=
+                        current.userEducationGetList,
+                    builder: (context, state) {
+                      if (state.userEducationGetList.status == Status.loading) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
 
-                  final fetchedList =
-                      state.userEducationGetList.data?.data ?? [];
+                      final fetchedList =
+                          state.userEducationGetList.data?.data ?? [];
 
-                  if (state.userEducationGetList.status == Status.error ||
-                      fetchedList.isEmpty) {
-                    return _buildAddUserEducationCard(
-                      context,
-                      "No Education Data Available",
-                      Icons.school,
-                    );
-                  }
-
-                  // ✅ Only assign fetched list once, if `educationList` is empty
-                  if (educationList.isEmpty) {
-                    educationList = List<UserEducation>.from(fetchedList);
-                  }
-
-                  return buildUserEducationCard(
-                    educationList,
-                    context,
-                    _handleDeleteSuccess,
-                  );
-                },
-              ),
-
-              const SizedBox(height: 12),
-
-              /// EXPERIENCE SECTION
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      "Experience",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.add, color: Colors.blue),
-                      onPressed: () {
-                        Navigator.push(
+                      if (state.userEducationGetList.status == Status.error ||
+                          fetchedList.isEmpty) {
+                        return _buildAddUserEducationCard(
                           context,
-                          MaterialPageRoute(
-                            builder: (_) =>
-                                UserExperienceWidget(userId: widget.userId!),
-                          ),
+                          "No Education Data Available",
+                          Icons.school,
                         );
-                      },
+                      }
+
+                      if (educationList.isEmpty) {
+                        educationList = List<UserEducation>.from(fetchedList);
+                      }
+
+                      return buildUserEducationCard(
+                        educationList,
+                        context,
+                        _handleDeleteSuccess,
+                      );
+                    },
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  /// EXPERIENCE SECTION
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          "Experience",
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.add, color: Colors.blue),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => UserExperienceWidget(
+                                  userId: widget.userId!,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                  BlocBuilder<UserExperienceGetBloc, UserExperienceGetState>(
+                    buildWhen: (previous, current) =>
+                        previous.userExperienceGetList !=
+                        current.userExperienceGetList,
+                    builder: (context, state) {
+                      if (state.userExperienceGetList.status ==
+                          Status.loading) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+
+                      if (state.userExperienceGetList.status == Status.error) {
+                        return _buildAddUserExperienceCard(
+                          context,
+                          "Something went wrong!",
+                          Icons.error_outline,
+                        );
+                      }
+
+                      final fetchedExperience =
+                          state.userExperienceGetList.data?.data ?? [];
+
+                      experiences = fetchedExperience;
+
+                      if (fetchedExperience.isEmpty) {
+                        return _buildAddUserExperienceCard(
+                          context,
+                          "No Experience Data Available",
+                          Icons.person_outline,
+                        );
+                      }
+
+                      return buildUserExperienceCards(
+                        context,
+                        experiences,
+                        _onExperienceDelete,
+                      );
+                    },
+                  ),
+                ],
               ),
-              BlocBuilder<UserExperienceGetBloc, UserExperienceGetState>(
-                buildWhen: (previous, current) =>
-                    previous.userExperienceGetList !=
-                    current.userExperienceGetList,
-                builder: (context, state) {
-                  if (state.userExperienceGetList.status == Status.loading) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-
-                  if (state.userExperienceGetList.status == Status.error) {
-                    return _buildAddUserExperienceCard(
-                      context,
-                      "Something went wrong!",
-                      Icons.error_outline,
-                    );
-                  }
-
-                  final fetchedExperience =
-                      state.userExperienceGetList.data?.data ?? [];
-
-                  // Update the global list to use in deletion
-                  experiences = fetchedExperience;
-
-                  if (fetchedExperience.isEmpty) {
-                    return _buildAddUserExperienceCard(
-                      context,
-                      "No Experience Data Available",
-                      Icons.person_outline,
-                    );
-                  }
-
-                  return buildUserExperienceCards(
-                    context,
-                    experiences,
-                    _onExperienceDelete,
-                  );
-                },
-              ),
-            ],
+            ),
           ),
         ),
       ),
@@ -542,230 +555,245 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildUserProfileCard(profile) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Stack(
-        children: [
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(10),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withOpacity(0.5),
-                  blurRadius: 3,
-                  offset: const Offset(0, 4),
+    return FutureBuilder<String?>(
+      future: SessionController().getFullName(), // ✅ Get full name
+      builder: (context, snapshot) {
+        final loggedInFullName = snapshot.data ?? '';
+
+        return Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Stack(
+            children: [
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.5),
+                      blurRadius: 3,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  /// Profile image and basic info
-                  Row(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      CircleAvatar(
-                        radius: 45,
-                        backgroundImage:
-                            profile.profileImage?.isNotEmpty == true
-                            ? NetworkImage(profile.profileImage)
-                            : null,
-                        child: profile.profileImage?.isEmpty ?? true
-                            ? const Icon(Icons.person, size: 50)
-                            : null,
+                      /// Profile image and basic info
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CircleAvatar(
+                            radius: 45,
+                            backgroundImage:
+                                profile.profileImage?.isNotEmpty == true
+                                ? NetworkImage(profile.profileImage)
+                                : null,
+                            child: profile.profileImage?.isEmpty ?? true
+                                ? const Icon(Icons.person, size: 50)
+                                : null,
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  profile.fullName,
+                                  style: const TextStyle(
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 4),
+                                Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.badge,
+                                      color: Colors.blue,
+                                      size: 20,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Expanded(
+                                      child: Text(
+                                        profile.designation,
+                                        style: const TextStyle(fontSize: 16),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.location_on,
+                                      size: 16,
+                                      color: Colors.blue,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Expanded(
+                                      child: Text(
+                                        profile.location,
+                                        style: const TextStyle(fontSize: 14),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+
+                                /// 👇 Show Logged-in Full Name (Optional Section)
+                                if (loggedInFullName.isNotEmpty)
+                                  Text(
+                                    "Logged in as: $loggedInFullName",
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey,
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+
+                      const SizedBox(height: 16),
+
+                      // Email
+                      Row(
+                        children: [
+                          const Icon(Icons.email, size: 18, color: Colors.blue),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              profile.email,
+                              style: const TextStyle(fontSize: 14),
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 8),
+
+                      // Phone
+                      Row(
+                        children: [
+                          const Icon(Icons.phone, size: 18, color: Colors.blue),
+                          const SizedBox(width: 8),
+                          Text(
+                            profile.contactNumber,
+                            style: const TextStyle(fontSize: 14),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 16),
+                      const Divider(),
+
+                      const Text(
+                        "Professional Summary:",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        profile.professionalSummary,
+                        style: const TextStyle(fontSize: 14),
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      if (profile.organization.isNotEmpty)
+                        Row(
                           children: [
+                            const Icon(
+                              Icons.business,
+                              size: 18,
+                              color: Colors.blue,
+                            ),
+                            const SizedBox(width: 8),
                             Text(
-                              profile.fullName,
-                              style: const TextStyle(
-                                fontSize: 22,
-                                fontWeight: FontWeight.bold,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            const SizedBox(height: 4),
-                            Row(
-                              children: [
-                                const Icon(
-                                  Icons.badge,
-                                  color: Colors.blue,
-                                  size: 20,
-                                ),
-                                const SizedBox(width: 6),
-                                Expanded(
-                                  child: Text(
-                                    profile.designation,
-                                    style: const TextStyle(fontSize: 16),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 4),
-                            Row(
-                              children: [
-                                const Icon(
-                                  Icons.location_on,
-                                  size: 16,
-                                  color: Colors.blue,
-                                ),
-                                const SizedBox(width: 4),
-                                Expanded(
-                                  child: Text(
-                                    profile.location,
-                                    style: const TextStyle(fontSize: 14),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              ],
+                              profile.organization,
+                              style: const TextStyle(fontSize: 14),
                             ),
                           ],
                         ),
-                      ),
                     ],
                   ),
-
-                  const SizedBox(height: 16),
-
-                  /// Email
-                  Row(
-                    children: [
-                      const Icon(Icons.email, size: 18, color: Colors.blue),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          profile.email,
-                          style: const TextStyle(fontSize: 14),
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 8),
-
-                  /// Phone
-                  Row(
-                    children: [
-                      const Icon(Icons.phone, size: 18, color: Colors.blue),
-                      const SizedBox(width: 8),
-                      Text(
-                        profile.contactNumber,
-                        style: const TextStyle(fontSize: 14),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 16),
-                  const Divider(),
-
-                  /// Professional Summary
-                  const Text(
-                    "Professional Summary:",
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    profile.professionalSummary,
-                    style: const TextStyle(fontSize: 14),
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  /// Organization (optional)
-                  if (profile.organization.isNotEmpty)
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.business,
-                          size: 18,
-                          color: Colors.blue,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          profile.organization,
-                          style: const TextStyle(fontSize: 14),
-                        ),
-                      ],
-                    ),
-                ],
-              ),
-            ),
-          ),
-
-          /// Delete Button
-          Positioned(
-            top: 12,
-            right: 12,
-            child: GestureDetector(
-              onTap: () async {
-                final shouldDelete = await showDialog<bool>(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: const Text("Delete Profile"),
-                    content: const Text(
-                      "Are you sure you want to delete this profile?",
-                    ),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context, false),
-                        child: const Text("Cancel"),
-                      ),
-                      ElevatedButton(
-                        onPressed: () => Navigator.pop(context, true),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red,
-                        ),
-                        child: const Text("Delete"),
-                      ),
-                    ],
-                  ),
-                );
-
-                if (shouldDelete == true) {
-                  try {
-                    await responseApi.deleteUserProfile(profile.userId);
-                    setState(() {});
-                    // Immediately remove the item from UI by dispatching a BLoC event
-                    // context.read<UserProfileGetBloc>().add(
-                    //   UserProfileDeleted(profile.userId),
-                    // );
-
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text("Profile deleted successfully"),
-                      ),
-                    );
-                  } catch (e) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          "Error deleting profile: ${e.toString()}",
-                        ),
-                      ),
-                    );
-                  }
-                }
-              },
-
-              child: Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.red.withOpacity(0.1),
                 ),
-                child: const Icon(Icons.delete, color: Colors.red),
               ),
-            ),
+
+              // Delete button
+              Positioned(
+                top: 12,
+                right: 12,
+                child: GestureDetector(
+                  onTap: () async {
+                    final shouldDelete = await showDialog<bool>(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text("Delete Profile"),
+                        content: const Text(
+                          "Are you sure you want to delete this profile?",
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, false),
+                            child: const Text("Cancel"),
+                          ),
+                          ElevatedButton(
+                            onPressed: () => Navigator.pop(context, true),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.red,
+                            ),
+                            child: const Text("Delete"),
+                          ),
+                        ],
+                      ),
+                    );
+
+                    if (shouldDelete == true) {
+                      try {
+                        await SessionController().clearFullName();
+                        await responseApi.deleteUserProfile(profile.userId);
+                        setState(() {});
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text("Profile deleted successfully"),
+                          ),
+                        );
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              "Error deleting profile: ${e.toString()}",
+                            ),
+                          ),
+                        );
+                      }
+                    }
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.red.withOpacity(0.1),
+                    ),
+                    child: const Icon(Icons.delete, color: Colors.red),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
