@@ -1,5 +1,5 @@
 class AppUrl {
-  static var baseUrl = 'http://3.86.39.229:8000';
+  static var baseUrl = 'http://100.24.6.173:8000';
   static var registerEndPoint = '$baseUrl/auth/register';
   static var loginEndPoint = '$baseUrl/auth/login';
   static var verifyOTPEndPoint = '$baseUrl/auth/verify-otp';

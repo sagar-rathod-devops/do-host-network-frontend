@@ -158,6 +158,84 @@ class ResponseApiRepository {
     }
   }
 
+  Future<int> getFollowersCount(String userId) async {
+    final token = await SessionController().getToken();
+    final url = "${AppUrl.baseUrl}/user/$userId/followers";
+    final headers = {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
+    };
+
+    final response = await _apiService.getApi(url, headers: headers);
+    final followers = response['followers'];
+
+    if (followers == null) return 0;
+    if (followers is List) return followers.length;
+
+    return 0;
+  }
+
+  Future<int> getFollowingsCount(String userId) async {
+    final token = await SessionController().getToken();
+    final url = "${AppUrl.baseUrl}/user/$userId/followings";
+    final headers = {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
+    };
+
+    final response = await _apiService.getApi(url, headers: headers);
+    final followings = response['followings'];
+
+    if (followings == null) return 0;
+    if (followings is List) return followings.length;
+
+    return 0;
+  }
+
+  Future<List<dynamic>> getUserPosts(String userId) async {
+    final token = await SessionController().getToken();
+    final url = "${AppUrl.baseUrl}/posts/user/$userId";
+    final headers = {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
+    };
+
+    final response = await _apiService.getApi(url, headers: headers);
+    if (response is List) return response;
+    return [];
+  }
+
+  // ✅ NEW: Get total likes for a post
+  Future<int> getPostLikesCount(String postId) async {
+    final token = await SessionController().getToken();
+    final url = "${AppUrl.baseUrl}/post/$postId/likes";
+    final headers = {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
+    };
+
+    final response = await _apiService.getApi(url, headers: headers);
+    final likes = response['likes'];
+
+    if (likes is List) return likes.length;
+    return 0;
+  }
+
+  // ✅ NEW: Get total comments for a post
+  Future<int> getPostCommentsCount(String postId) async {
+    final token = await SessionController().getToken();
+    final url = "${AppUrl.baseUrl}/post/$postId/comments";
+    final headers = {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
+    };
+
+    final response = await _apiService.getApi(url, headers: headers);
+    final comments = response['comments'];
+
+    if (comments is List) return comments.length;
+    return 0;
+  }
   // ========================= DELETE APIs =========================
 
   Future<void> deleteUserVideo(String videoId) async {

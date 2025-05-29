@@ -9,6 +9,7 @@ import 'package:do_host/view/profile/user_education/user_education_widget.dart';
 import 'package:do_host/view/profile/user_experience/user_experience_widget.dart';
 import 'package:do_host/view/profile/user_profile/user_profile_update_widget.dart';
 import 'package:do_host/view/profile/user_profile/user_profile_widget.dart';
+import 'package:do_host/view/profile/user_stats_widgets.dart';
 import 'package:do_host/view/profile/user_video/user_video_widget.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -256,7 +257,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
               /// EDUCATION SECTION
               const SizedBox(height: 2),
-
+              UserStatsWidget(userId: widget.userId!),
+              const SizedBox(height: 2),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Row(
