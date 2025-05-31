@@ -9,11 +9,13 @@ class UserEducationGetHttpApiRepository
   final _apiServices = NetworkApiService();
 
   @override
-  Future<UserEducationListResponse> fetchUserEducationList() async {
+  Future<UserEducationListResponse> fetchUserEducationList(
+    String? userId,
+  ) async {
     try {
       // Fetch token and userId from session
       String? token = await SessionController().getToken();
-      String? userId = await SessionController().getUserId();
+      // String? userId = await SessionController().getUserId();
 
       if (token == null || userId == null) {
         throw Exception('Token or User ID not found. Please log in.');

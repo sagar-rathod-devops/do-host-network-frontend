@@ -1,3 +1,4 @@
+import 'package:do_host/configs/components/round_button.dart';
 import 'package:flutter/material.dart';
 
 class InterNetExceptionWidget extends StatefulWidget {
@@ -31,15 +32,16 @@ class _InterNetExceptionWidgetState extends State<InterNetExceptionWidget> {
             ),
           ),
           SizedBox(height: MediaQuery.of(context).size.height * .15),
-          ElevatedButton(
-            onPressed: widget.onPress,
-            child: Center(
-              child: Text(
-                'RETRY',
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-            ),
-          ),
+          RoundButton(title: 'RETRY', onPress: widget.onPress),
+          // ElevatedButton(
+          //   onPressed: widget.onPress,
+          //   child: Center(
+          //     child: Text(
+          //       'RETRY',
+          //       style: Theme.of(context).textTheme.bodySmall,
+          //     ),
+          //   ),
+          // ),
         ],
       ),
     );

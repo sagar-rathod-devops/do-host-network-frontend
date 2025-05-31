@@ -1,21 +1,24 @@
-import 'dart:io';
+import 'dart:io' show File;
+import 'package:do_host/configs/color/color.dart';
+import 'package:flutter/foundation.dart'; // For kIsWeb
 import 'package:do_host/repository/response_api_repository.dart';
 import 'package:do_host/utils/app_url.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:video_player/video_player.dart';
 
 import 'package:do_host/bloc/user_video_bloc/user_video_bloc.dart';
 import 'package:do_host/bloc/user_video_get_bloc/user_video_get_bloc.dart';
-import 'package:do_host/configs/routes/routes_name.dart';
 import 'package:do_host/data/response/status.dart';
 import 'package:do_host/services/session_manager/session_controller.dart';
 
 import '../../../data/network/network_api_services.dart';
 
 class VideoAppBar extends StatefulWidget implements PreferredSizeWidget {
-  const VideoAppBar({Key? key}) : super(key: key);
+  String? userId;
+  VideoAppBar({Key? key, required this.userId}) : super(key: key);
 
   @override
   State<VideoAppBar> createState() => _VideoAppBarState();
@@ -25,7 +28,7 @@ class VideoAppBar extends StatefulWidget implements PreferredSizeWidget {
 }
 
 class _VideoAppBarState extends State<VideoAppBar> {
-  File? _videoFile;
+  XFile? _videoFile;
   VideoPlayerController? _controller;
   final ImagePicker _picker = ImagePicker();
   String? _fetchedVideoUrl;
@@ -38,7 +41,9 @@ class _VideoAppBarState extends State<VideoAppBar> {
   @override
   void initState() {
     super.initState();
-    context.read<UserVideoGetBloc>().add(UserVideoGetFetch());
+    context.read<UserVideoGetBloc>().add(
+      UserVideoGetFetch(userId: widget.userId!),
+    );
   }
 
   @override
@@ -49,16 +54,20 @@ class _VideoAppBarState extends State<VideoAppBar> {
 
   Future<void> _initializeControllerWithFile(File file) async {
     await _controller?.dispose();
+
     final newController = VideoPlayerController.file(file);
     await newController.initialize();
     newController.setLooping(true);
+
     if (!mounted) return;
+
     setState(() {
-      _videoFile = file;
+      _videoFile = XFile(file.path);
       _controller = newController;
       _fetchedVideoUrl = null;
-      _currentVideoId = null; // New local file, no remote id yet
+      _currentVideoId = null;
     });
+
     newController.play();
   }
 
@@ -85,6 +94,14 @@ class _VideoAppBarState extends State<VideoAppBar> {
   }
 
   Future<void> _pickVideo(BuildContext context) async {
+    if (kIsWeb) {
+      // Web: Not supported using File. Consider using network URL if needed.
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Video picking not supported on Web.")),
+      );
+      return;
+    }
+
     final pickedFile = await _picker.pickVideo(source: ImageSource.gallery);
     if (pickedFile != null) {
       final file = File(pickedFile.path);
@@ -109,7 +126,9 @@ class _VideoAppBarState extends State<VideoAppBar> {
 
   Widget _buildVideoWidget() {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(
+        child: SpinKitSpinningLines(color: AppColors.buttonColor, size: 50.0),
+      );
     }
 
     if (_controller != null && _controller!.value.isInitialized) {
@@ -159,7 +178,9 @@ class _VideoAppBarState extends State<VideoAppBar> {
       );
 
       // Refetch video data from backend
-      context.read<UserVideoGetBloc>().add(UserVideoGetFetch());
+      context.read<UserVideoGetBloc>().add(
+        UserVideoGetFetch(userId: widget.userId!),
+      );
     } catch (e) {
       ScaffoldMessenger.of(
         context,
@@ -204,7 +225,9 @@ class _VideoAppBarState extends State<VideoAppBar> {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text("Video uploaded successfully")),
             );
-            context.read<UserVideoGetBloc>().add(UserVideoGetFetch());
+            context.read<UserVideoGetBloc>().add(
+              UserVideoGetFetch(userId: widget.userId!),
+            );
           }
         },
         builder: (context, _) {

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:do_host/model/user_profile_get/user_profile_get_model.dart';
 import 'package:flutter/foundation.dart';
 
 import '../../services/session_manager/session_controller.dart';
@@ -12,12 +13,11 @@ class ResponseApiRepository {
     required String receiverId,
     required String message,
     required String type,
-    required String postId,
+    String? postId, // made nullable
   }) async {
     try {
       final token = await SessionController().getToken();
-      final senderId = await SessionController()
-          .getUserId(); // You must implement this
+      final senderId = await SessionController().getUserId();
 
       if (token == null) throw Exception('No token found in session');
       if (senderId == null)
@@ -33,10 +33,14 @@ class ResponseApiRepository {
         "recipient_user_id": receiverId,
         "sender_user_id": senderId,
         "type": type,
-        "entity_id": postId,
         "entity_type": "post",
         "message": message,
       };
+
+      // Only add entity_id if postId is not null or empty
+      if (postId != null && postId.isNotEmpty) {
+        body["entity_id"] = postId;
+      }
 
       print('[sendNotification][REQUEST] URL: $url');
       print('[sendNotification][REQUEST] Headers: $headers');
@@ -63,6 +67,35 @@ class ResponseApiRepository {
       };
 
       await _apiService.postApi(url, null, headers: headers);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<UserProfileResponse> fetchUserProfileGetList(String userId) async {
+    try {
+      // Fetch token and userId from session
+      String? token = await SessionController().getToken();
+
+      if (token == null || userId == null) {
+        throw Exception('Token or User ID not found. Please log in.');
+      }
+
+      // Add Authorization headers
+      Map<String, String> headers = {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "Authorization": "Bearer $token",
+      };
+
+      // Build complete endpoint URL
+      final String url = "${AppUrl.userProfileGetEndPoint}/$userId";
+
+      // Perform GET request
+      dynamic response = await _apiService.getApi(url, headers: headers);
+
+      // Parse and return the response
+      return UserProfileResponse.fromJson(response);
     } catch (e) {
       rethrow;
     }

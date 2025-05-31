@@ -30,12 +30,10 @@ class _EmailInputWidgetState extends State<EmailInputWidget> {
             focusNode: focusNode, // Setting focus node
             decoration: InputDecoration(
               icon: const Icon(Icons.email), // Icon for email input field
-              labelText: AppLocalizations.of(
-                context,
-              )!.email, // Label text for email input field
-              helperText: AppLocalizations.of(
-                context,
-              )!.aCompleteValidEmailExamplejoegmailcom, // Helper text for email input field
+              labelText:
+                  'Email or Username', // Label text for email input field
+              helperText:
+                  'A complete, valid email e.g. joe@gmail.com or username', // Helper text for email input field
             ),
             keyboardType: TextInputType
                 .emailAddress, // Setting keyboard type to email address
@@ -45,11 +43,11 @@ class _EmailInputWidgetState extends State<EmailInputWidget> {
             },
             validator: (value) {
               if (value!.isEmpty) {
-                return 'Enter email';
+                return 'Enter email or username';
               }
-              if (!value.emailValidator()) {
-                return 'Email is not correct';
-              }
+              // if (!value.emailValidator()) {
+              //   return 'Email is not correct';
+              // }
               return null;
             },
             textInputAction: TextInputAction.next,

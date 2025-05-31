@@ -9,10 +9,12 @@ class UserExperienceGetHttpApiRepository
   final _apiServices = NetworkApiService();
 
   @override
-  Future<UserExperienceListResponse> fetchUserExperienceList() async {
+  Future<UserExperienceListResponse> fetchUserExperienceList(
+    String? userId,
+  ) async {
     try {
       String? token = await SessionController().getToken();
-      String? userId = await SessionController().getUserId();
+      // String? userId = await SessionController().getUserId();
 
       if (token == null || userId == null) {
         throw Exception('Token or User ID not found. Please log in.');

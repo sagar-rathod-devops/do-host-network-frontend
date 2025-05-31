@@ -24,11 +24,27 @@ class FullNameChanged extends UserProfileEvent {
 }
 
 class ProfileImageChanged extends UserProfileEvent {
-  final File profileImage;
+  final io.File profileImage;
   const ProfileImageChanged({required this.profileImage});
 
   @override
   List<Object?> get props => [profileImage];
+}
+
+class ProfileImageChangedWeb extends UserProfileEvent {
+  final Uint8List imageBytes;
+  const ProfileImageChangedWeb({required this.imageBytes});
+
+  @override
+  List<Object?> get props => [imageBytes];
+}
+
+class HasShownSuccessMessageChanged extends UserProfileEvent {
+  final bool hasShown;
+  const HasShownSuccessMessageChanged({required this.hasShown});
+
+  @override
+  List<Object?> get props => [hasShown];
 }
 
 class DesignationChanged extends UserProfileEvent {

@@ -1,8 +1,7 @@
-import 'dart:io';
-
 import 'package:do_host/bloc/user_experience_get_bloc/user_experience_get_bloc.dart';
 import 'package:do_host/bloc/user_video_bloc/user_video_bloc.dart';
 import 'package:do_host/bloc/user_video_get_bloc/user_video_get_bloc.dart';
+import 'package:do_host/configs/color/color.dart';
 import 'package:do_host/configs/routes/routes_name.dart';
 import 'package:do_host/repository/response_api_repository.dart';
 import 'package:do_host/services/session_manager/session_controller.dart';
@@ -15,6 +14,7 @@ import 'package:do_host/view/profile/user_video/user_video_widget.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:intl/intl.dart';
 import 'package:video_player/video_player.dart';
 
@@ -34,7 +34,7 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  File? _videoFile;
+  // File? _videoFile;
   VideoPlayerController? _controller;
   final responseApi = ResponseApiRepository();
   List<UserEducation> educationList = [];
@@ -61,102 +61,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     userVideoGetBloc = UserVideoGetBloc(userVideoGetApiRepository: getIt());
     userVideoBloc = UserVideoBloc(userVideoApiRepository: getIt());
 
-    userVideoGetBloc.add(UserVideoGetFetch());
-  }
-
-  Future<void> _pickVideo() async {
-    final result = await FilePicker.platform.pickFiles(type: FileType.video);
-    if (result != null && result.files.single.path != null) {
-      File file = File(result.files.single.path!);
-
-      final tempController = VideoPlayerController.file(file);
-      await tempController.initialize();
-      final duration = tempController.value.duration;
-
-      if (duration.inMinutes < 2 ||
-          (duration.inMinutes == 2 && duration.inSeconds == 0)) {
-        _initializeVideo(file);
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Please select a video shorter than 2 minutes."),
-          ),
-        );
-      }
-
-      tempController.dispose();
-    }
-  }
-
-  void _initializeVideo(File file) {
-    _controller?.dispose();
-    _controller = VideoPlayerController.file(file)
-      ..initialize().then((_) {
-        setState(() {
-          _videoFile = file;
-        });
-        _controller?.play();
-        _controller?.setLooping(true);
-      });
-  }
-
-  PreferredSizeWidget _buildVideoAppBar() {
-    return PreferredSize(
-      preferredSize: Size.fromHeight(220),
-      child: AppBar(
-        automaticallyImplyLeading: false,
-        flexibleSpace: Stack(
-          fit: StackFit.expand,
-          children: [
-            _videoFile != null &&
-                    _controller != null &&
-                    _controller!.value.isInitialized
-                ? ClipRRect(child: VideoPlayer(_controller!))
-                : Container(
-                    color: Colors.black,
-                    child: Center(
-                      child: Text(
-                        "Add interview video",
-                        style: TextStyle(color: Colors.white, fontSize: 18),
-                      ),
-                    ),
-                  ),
-            Positioned(
-              top: 10,
-              right: 10,
-              child: ElevatedButton.icon(
-                onPressed: _pickVideo,
-                icon: Icon(Icons.video_call),
-                label: Text(_videoFile == null ? "Add" : "Change"),
-              ),
-            ),
-            if (_videoFile != null &&
-                _controller != null &&
-                _controller!.value.isInitialized)
-              Positioned(
-                bottom: 10,
-                right: 10,
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    if (_controller!.value.isPlaying) {
-                      _controller!.pause();
-                    } else {
-                      _controller!.play();
-                    }
-                    setState(() {});
-                  },
-                  icon: Icon(
-                    _controller!.value.isPlaying
-                        ? Icons.pause
-                        : Icons.play_arrow,
-                  ),
-                  label: Text(_controller!.value.isPlaying ? "Pause" : "Play"),
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
+    userVideoGetBloc.add(UserVideoGetFetch(userId: widget.userId!));
   }
 
   void _handleDeleteSuccess(String id) async {
@@ -221,19 +126,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return MultiBlocProvider(
       providers: [
         BlocProvider(
-          create: (_) => userProfileGetBloc..add(UserProfileGetFetch()),
+          create: (_) =>
+              userProfileGetBloc..add(UserProfileGetFetch(widget.userId!)),
         ),
         BlocProvider(
-          create: (_) => userEducationGetBloc..add(UserEducationGetFetch()),
+          create: (_) =>
+              userEducationGetBloc..add(UserEducationGetFetch(widget.userId!)),
         ),
         BlocProvider(
-          create: (_) => userExperienceGetBloc..add(UserExperienceGetFetch()),
+          create: (_) =>
+              userExperienceGetBloc
+                ..add(UserExperienceGetFetch(widget.userId!)),
         ),
         BlocProvider(create: (_) => userVideoGetBloc),
         BlocProvider(create: (_) => userVideoBloc),
       ],
       child: Scaffold(
-        appBar: const VideoAppBar(), // ✅ Now has access to both blocs
+        appBar: VideoAppBar(
+          userId: widget.userId,
+        ), // ✅ Now has access to both blocs
         body: Center(
           child: ConstrainedBox(
             constraints: BoxConstraints(maxWidth: maxContentWidth),
@@ -243,16 +154,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   /// USER PROFILE SECTION
                   BlocBuilder<UserProfileGetBloc, UserProfileGetState>(
                     buildWhen: (previous, current) =>
-                        previous.userProfileGetList !=
-                        current.userProfileGetList,
+                        previous.userProfile != current.userProfile,
                     builder: (context, state) {
-                      final status = state.userProfileGetList.status;
-                      final profile = state.userProfileGetList.data;
+                      final status = state.userProfile.status;
+                      final profile = state.userProfile.data;
 
                       debugPrint("User Profile data: $profile");
 
                       if (status == Status.loading) {
-                        return const Center(child: CircularProgressIndicator());
+                        return const Center(
+                          child: SpinKitSpinningLines(
+                            color: AppColors.buttonColor,
+                            size: 50.0,
+                          ),
+                        );
                       }
 
                       if (status == Status.error || profile == null) {
@@ -304,7 +219,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         current.userEducationGetList,
                     builder: (context, state) {
                       if (state.userEducationGetList.status == Status.loading) {
-                        return const Center(child: CircularProgressIndicator());
+                        return const Center(
+                          child: SpinKitSpinningLines(
+                            color: AppColors.buttonColor,
+                            size: 50.0,
+                          ),
+                        );
                       }
 
                       final fetchedList =
@@ -369,7 +289,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     builder: (context, state) {
                       if (state.userExperienceGetList.status ==
                           Status.loading) {
-                        return const Center(child: CircularProgressIndicator());
+                        return const Center(
+                          child: SpinKitSpinningLines(
+                            color: AppColors.buttonColor,
+                            size: 50.0,
+                          ),
+                        );
                       }
 
                       if (state.userExperienceGetList.status == Status.error) {

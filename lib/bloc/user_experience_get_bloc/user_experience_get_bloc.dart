@@ -26,7 +26,7 @@ class UserExperienceGetBloc
     Emitter<UserExperienceGetState> emit,
   ) async {
     await userExperienceGetApiRepository
-        .fetchUserExperienceList()
+        .fetchUserExperienceList(event.userId)
         .then((response) {
           emit(
             state.copyWith(
@@ -39,7 +39,6 @@ class UserExperienceGetBloc
             print(stackTrace);
             print(error);
           }
-
           emit(
             state.copyWith(
               userExperienceGetList: ApiResponse.error(error.toString()),

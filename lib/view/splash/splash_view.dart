@@ -1,3 +1,4 @@
+import 'package:do_host/configs/color/color.dart';
 import 'package:flutter/material.dart';
 import '../../services/splash/splash_services.dart'; // Importing the SplashServices class from the services/splash/splash_services.dart file
 
@@ -61,7 +62,7 @@ class _SplashViewState extends State<SplashView> {
                   style: TextStyle(
                     fontSize: fontSize, // Animated font size
                     fontWeight: FontWeight.bold,
-                    color: Colors.deepOrange,
+                    color: AppColors.buttonColor,
                   ),
                 );
               },

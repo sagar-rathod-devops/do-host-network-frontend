@@ -1,4 +1,5 @@
 import 'package:do_host/bloc/post_job_bloc/post_job_bloc.dart';
+import 'package:do_host/configs/color/color.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -29,13 +30,13 @@ class _LastDateWidgetState extends State<LastDateWidget> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: ColorScheme.light(
-              primary: Colors.deepOrange, // header background color
-              onPrimary: Colors.white, // header text color
-              onSurface: Colors.black, // body text color (dates)
+              primary: AppColors.buttonColor, // header background color
+              onPrimary: AppColors.whiteColor, // header text color
+              onSurface: AppColors.blackColor, // body text color (dates)
             ),
             textButtonTheme: TextButtonThemeData(
               style: TextButton.styleFrom(
-                foregroundColor: Colors.deepOrange, // button text color
+                foregroundColor: AppColors.buttonColor, // button text color
               ),
             ),
           ),

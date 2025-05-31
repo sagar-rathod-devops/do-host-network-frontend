@@ -1,18 +1,16 @@
 part of 'user_profile_get_bloc.dart';
 
 class UserProfileGetState extends Equatable {
-  const UserProfileGetState({required this.userProfileGetList});
+  final ApiResponse<UserProfileResponse> userProfile;
 
-  final ApiResponse<UserProfileResponse> userProfileGetList;
+  const UserProfileGetState({required this.userProfile});
 
   UserProfileGetState copyWith({
-    ApiResponse<UserProfileResponse>? userProfileGetList,
+    ApiResponse<UserProfileResponse>? userProfile,
   }) {
-    return UserProfileGetState(
-      userProfileGetList: userProfileGetList ?? this.userProfileGetList,
-    );
+    return UserProfileGetState(userProfile: userProfile ?? this.userProfile);
   }
 
   @override
-  List<Object?> get props => [userProfileGetList];
+  List<Object?> get props => [userProfile];
 }

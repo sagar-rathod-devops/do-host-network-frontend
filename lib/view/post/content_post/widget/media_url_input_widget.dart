@@ -1,4 +1,6 @@
-import 'dart:io';
+import 'dart:io' as io;
+import 'dart:typed_data';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:do_host/configs/routes/routes_name.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -15,18 +17,28 @@ class MediaUrlWidget extends StatefulWidget {
 }
 
 class _MediaUrlWidgetState extends State<MediaUrlWidget> {
-  File? _selectedImage;
+  io.File? _selectedImage;
+  Uint8List? _webImageBytes;
   final ImagePicker _picker = ImagePicker();
 
   Future<void> _pickImage(BuildContext context) async {
     final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
-      setState(() {
-        _selectedImage = File(pickedFile.path);
-      });
-      context.read<PostContentBloc>().add(
-        MediaUrlChanged(mediaFile: _selectedImage!),
-      );
+      if (kIsWeb) {
+        final webImageBytes = await pickedFile.readAsBytes();
+        setState(() {
+          _webImageBytes = webImageBytes;
+        });
+        context.read<PostContentBloc>().add(
+          MediaUrlChanged(mediaBytes: webImageBytes),
+        );
+      } else {
+        final file = io.File(pickedFile.path);
+        setState(() {
+          _selectedImage = file;
+        });
+        context.read<PostContentBloc>().add(MediaUrlChanged(mediaFile: file));
+      }
     }
   }
 
@@ -35,11 +47,21 @@ class _MediaUrlWidgetState extends State<MediaUrlWidget> {
     return Column(
       children: [
         if (_selectedImage != null)
-          Image.file(
-            _selectedImage!,
-            width: 100,
-            height: 100,
-            fit: BoxFit.cover,
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: kIsWeb
+                ? Image.memory(
+                    _webImageBytes!,
+                    width: 100,
+                    height: 100,
+                    fit: BoxFit.cover,
+                  )
+                : Image.file(
+                    io.File(_selectedImage!.path),
+                    width: 100,
+                    height: 100,
+                    fit: BoxFit.cover,
+                  ),
           ),
         ElevatedButton.icon(
           icon: const Icon(Icons.upload),

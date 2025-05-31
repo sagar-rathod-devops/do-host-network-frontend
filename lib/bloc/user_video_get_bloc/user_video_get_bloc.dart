@@ -9,6 +9,7 @@ import '../../model/user_video_get/user_video_model.dart';
 part 'user_video_get_event.dart';
 part 'user_video_get_state.dart';
 
+// user_video_get_bloc.dart
 class UserVideoGetBloc extends Bloc<UserVideoGetEvent, UserVideoGetState> {
   final UserVideoGetApiRepository userVideoGetApiRepository;
 
@@ -22,7 +23,9 @@ class UserVideoGetBloc extends Bloc<UserVideoGetEvent, UserVideoGetState> {
     Emitter<UserVideoGetState> emit,
   ) async {
     try {
-      final response = await userVideoGetApiRepository.fetchUserVideoList();
+      final response = await userVideoGetApiRepository.fetchUserVideoList(
+        event.userId,
+      );
       emit(state.copyWith(userVideoGetList: ApiResponse.completed(response)));
     } catch (error, stackTrace) {
       if (kDebugMode) {

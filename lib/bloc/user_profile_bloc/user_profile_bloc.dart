@@ -1,6 +1,6 @@
 import 'dart:async';
-import 'dart:io';
-
+import 'dart:io' as io;
+import 'dart:typed_data';
 import 'package:bloc/bloc.dart';
 import 'package:do_host/services/session_manager/session_controller.dart';
 import 'package:equatable/equatable.dart';
@@ -18,6 +18,8 @@ class UserProfileBloc extends Bloc<UserProfileEvent, UserProfileState> {
     : super(const UserProfileState()) {
     on<UserIdChanged>(_onUserIdChanged);
     on<ProfileImageChanged>(_onProfileImageChanged);
+    on<ProfileImageChangedWeb>(_onProfileImageChangedWeb);
+    on<HasShownSuccessMessageChanged>(_onHasShownSuccessMessageChanged);
     on<FullNameChanged>(_onFullNameChanged);
     on<DesignationChanged>(_onDesignationChanged);
     on<OrganizationChanged>(_onOrganizationChanged);
@@ -37,7 +39,28 @@ class UserProfileBloc extends Bloc<UserProfileEvent, UserProfileState> {
     ProfileImageChanged event,
     Emitter<UserProfileState> emit,
   ) {
-    emit(state.copyWith(profileImage: event.profileImage));
+    emit(
+      state.copyWith(
+        profileImage: event.profileImage, // <-- use profileImage here
+        profileImageBytes: null,
+      ),
+    );
+  }
+
+  void _onProfileImageChangedWeb(
+    ProfileImageChangedWeb event,
+    Emitter<UserProfileState> emit,
+  ) {
+    emit(
+      state.copyWith(profileImageBytes: event.imageBytes, profileImage: null),
+    );
+  }
+
+  void _onHasShownSuccessMessageChanged(
+    HasShownSuccessMessageChanged event,
+    Emitter<UserProfileState> emit,
+  ) {
+    emit(state.copyWith(hasShownSuccessMessage: event.hasShown));
   }
 
   Future<void> _onFullNameChanged(

@@ -1,8 +1,9 @@
 // (Unchanged code you've written)
 
-import 'dart:io';
+import 'dart:io' as io;
 import 'package:do_host/bloc/post_all_content_get_bloc/post_all_content_get_bloc.dart';
 import 'package:do_host/configs/color/color.dart';
+import 'package:do_host/configs/components/internet_exception_widget.dart';
 import 'package:do_host/data/network/network_api_services.dart';
 import 'package:do_host/data/response/status.dart';
 import 'package:do_host/dependency_injection/locator.dart';
@@ -11,6 +12,7 @@ import 'package:do_host/services/session_manager/session_controller.dart';
 import 'package:do_host/utils/app_url.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -43,7 +45,12 @@ class _HomeScreenState extends State<HomeScreen> {
     postAllContentGetBloc = PostAllContentGetBloc(
       postAllContentGetApiRepository: getIt(),
     );
+
+    // Dispatch fetch event once here
+    postAllContentGetBloc.add(PostAllContentGetFetch());
+
     _fetchAndSaveUserProfile();
+
     postAllContentGetBloc.stream.listen((state) {
       if (state is PostAllContentGetState &&
           state.postAllContentGetList.status == Status.completed) {
@@ -53,7 +60,6 @@ class _HomeScreenState extends State<HomeScreen> {
           if (postId != null) {
             _likesCount[postId] = post.totalLikes ?? 0;
             _postComments.putIfAbsent(postId, () => []);
-            // Clear local new comments for this post because server data is fresh
             _postNewComments.remove(postId);
           }
         }
@@ -126,7 +132,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
         final bytes = response.bodyBytes;
         final tempDir = await getTemporaryDirectory();
-        final file = await File('${tempDir.path}/shared_image.jpg').create();
+        final file = await io.File('${tempDir.path}/shared_image.jpg').create();
         await file.writeAsBytes(bytes);
 
         await Share.shareXFiles([XFile(file.path)], text: text);
@@ -143,34 +149,51 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  double _calculateMaxContentWidth(double width) {
+    if (width < 600) {
+      return width;
+    } else if (width < 1100) {
+      return 600;
+    } else {
+      return 800;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        double contentWidth = constraints.maxWidth;
-        double maxContentWidth = contentWidth < 600
-            ? contentWidth
-            : contentWidth < 1100
-            ? 600
-            : 800;
+        final maxContentWidth = _calculateMaxContentWidth(constraints.maxWidth);
 
         return Scaffold(
           body: Center(
             child: ConstrainedBox(
               constraints: BoxConstraints(maxWidth: maxContentWidth),
-              child: BlocProvider.value(
-                value: postAllContentGetBloc..add(PostAllContentGetFetch()),
+              child: BlocProvider(
+                create: (_) => postAllContentGetBloc,
                 child: BlocBuilder<PostAllContentGetBloc, PostAllContentGetState>(
                   builder: (context, state) {
                     switch (state.postAllContentGetList.status) {
                       case Status.loading:
-                        return const Center(child: CircularProgressIndicator());
+                        return const Center(
+                          child: SpinKitSpinningLines(
+                            color: AppColors.buttonColor,
+                            size: 50.0,
+                          ),
+                        );
 
                       case Status.error:
                         final errorMsg =
                             state.postAllContentGetList.message ??
                             "Something went wrong!";
-                        return Center(child: Text(errorMsg));
+                        return InterNetExceptionWidget(
+                          onPress: () {
+                            // Add the logic to retry the API call or reload the content
+                            context.read<PostAllContentGetBloc>().add(
+                              PostAllContentGetFetch(),
+                            );
+                          },
+                        );
 
                       case Status.completed:
                         final posts =
@@ -298,7 +321,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                               await responseApi.sendNotification(
                                                 receiverId: post.userId,
                                                 message:
-                                                    "$fullName liked your post. ${post.postContent} ${post.mediaUrl}",
+                                                    "$fullName liked your post ${post.postContent} ${post.mediaUrl}",
                                                 type: "like",
                                                 postId: postId,
                                               );
@@ -319,17 +342,38 @@ class _HomeScreenState extends State<HomeScreen> {
                                                   color: Colors.black
                                                       .withOpacity(0.1),
                                                   blurRadius: 8,
-                                                  offset: Offset(0, 4),
+                                                  offset: const Offset(0, 4),
                                                 ),
                                               ],
                                             ),
                                             child: ClipRRect(
                                               borderRadius:
-                                                  BorderRadius.circular(
-                                                    10,
-                                                  ), // 👈 Rounded corners
+                                                  BorderRadius.circular(10),
                                               child: Image.network(
                                                 post.mediaUrl!,
+                                                loadingBuilder:
+                                                    (
+                                                      BuildContext context,
+                                                      Widget child,
+                                                      ImageChunkEvent?
+                                                      loadingProgress,
+                                                    ) {
+                                                      if (loadingProgress ==
+                                                          null)
+                                                        return child;
+                                                      return SizedBox(
+                                                        height: 200,
+                                                        child: Center(
+                                                          child:
+                                                              SpinKitSpinningLines(
+                                                                color: AppColors
+                                                                    .buttonColor,
+                                                                size: 50.0,
+                                                              ),
+                                                        ),
+                                                      );
+                                                    },
+
                                                 errorBuilder:
                                                     (
                                                       context,
@@ -338,6 +382,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                                     ) {
                                                       return const SizedBox.shrink();
                                                     },
+                                                fit: BoxFit.cover,
                                               ),
                                             ),
                                           ),
@@ -497,7 +542,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                               await responseApi.sendNotification(
                                                 receiverId: post.userId,
                                                 message:
-                                                    "$fullName commented on your post ${post.postContent} ${post.mediaUrl} ${commentText}",
+                                                    "$fullName commented on your post ${post.postContent} ${post.mediaUrl} $commentText",
                                                 type: "comment",
                                                 postId: postId,
                                               );

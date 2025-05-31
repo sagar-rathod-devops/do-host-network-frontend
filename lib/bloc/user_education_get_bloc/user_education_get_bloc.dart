@@ -26,7 +26,7 @@ class UserEducationGetBloc
     Emitter<UserEducationGetState> emit,
   ) async {
     await userEducationGetApiRepository
-        .fetchUserEducationList()
+        .fetchUserEducationList(event.userId)
         .then((response) {
           emit(
             state.copyWith(
@@ -39,7 +39,6 @@ class UserEducationGetBloc
             print(stackTrace);
             print(error);
           }
-
           emit(
             state.copyWith(
               userEducationGetList: ApiResponse.error(error.toString()),

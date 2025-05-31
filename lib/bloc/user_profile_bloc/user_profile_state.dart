@@ -4,6 +4,7 @@ class UserProfileState extends Equatable {
   const UserProfileState({
     this.userId = '',
     this.profileImage,
+    this.profileImageBytes,
     this.fullName = '',
     this.designation = '',
     this.organization = '',
@@ -13,11 +14,12 @@ class UserProfileState extends Equatable {
     this.contactNumber = '',
     this.userProfileApi = const ApiResponse.completed(''),
     this.userUpdateProfileApi = const ApiResponse.completed(''),
-    this.hasShownSuccessMessage = false, // NEW FIELD
+    this.hasShownSuccessMessage = false,
   });
 
   final String userId;
-  final File? profileImage;
+  final io.File? profileImage; // For desktop/mobile
+  final Uint8List? profileImageBytes; // For web
   final String fullName;
   final String designation;
   final String organization;
@@ -27,11 +29,12 @@ class UserProfileState extends Equatable {
   final String contactNumber;
   final ApiResponse<String> userProfileApi;
   final ApiResponse<String> userUpdateProfileApi;
-  final bool hasShownSuccessMessage; // NEW FIELD
+  final bool hasShownSuccessMessage;
 
   UserProfileState copyWith({
     String? userId,
-    File? profileImage,
+    io.File? profileImage,
+    Uint8List? profileImageBytes,
     String? fullName,
     String? designation,
     String? organization,
@@ -41,11 +44,12 @@ class UserProfileState extends Equatable {
     String? contactNumber,
     ApiResponse<String>? userProfileApi,
     ApiResponse<String>? userUpdateProfileApi,
-    bool? hasShownSuccessMessage, // NEW FIELD
+    bool? hasShownSuccessMessage,
   }) {
     return UserProfileState(
       userId: userId ?? this.userId,
       profileImage: profileImage ?? this.profileImage,
+      profileImageBytes: profileImageBytes ?? this.profileImageBytes,
       fullName: fullName ?? this.fullName,
       designation: designation ?? this.designation,
       organization: organization ?? this.organization,
@@ -64,6 +68,7 @@ class UserProfileState extends Equatable {
   List<Object?> get props => [
     userId,
     profileImage,
+    profileImageBytes,
     fullName,
     designation,
     organization,
@@ -73,6 +78,6 @@ class UserProfileState extends Equatable {
     contactNumber,
     userProfileApi,
     userUpdateProfileApi,
-    hasShownSuccessMessage, // Include in props
+    hasShownSuccessMessage,
   ];
 }

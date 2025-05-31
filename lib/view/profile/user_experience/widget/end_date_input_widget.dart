@@ -1,4 +1,5 @@
 import 'package:do_host/bloc/user_experience_bloc/user_experience_bloc.dart';
+import 'package:do_host/configs/color/color.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart'; // Add intl package to format the date
@@ -48,14 +49,15 @@ class _EndDateInputWidgetState extends State<EndDateInputWidget> {
                   return Theme(
                     data: Theme.of(context).copyWith(
                       colorScheme: ColorScheme.light(
-                        primary: Colors.deepOrange, // header background color
-                        onPrimary: Colors.white, // header text color
-                        onSurface: Colors.black, // date text color
+                        primary:
+                            AppColors.buttonColor, // header background color
+                        onPrimary: AppColors.whiteColor, // header text color
+                        onSurface: AppColors.blackColor, // date text color
                       ),
                       textButtonTheme: TextButtonThemeData(
                         style: TextButton.styleFrom(
-                          foregroundColor:
-                              Colors.deepOrange, // confirm/cancel button color
+                          foregroundColor: AppColors
+                              .buttonColor, // confirm/cancel button color
                         ),
                       ),
                     ),

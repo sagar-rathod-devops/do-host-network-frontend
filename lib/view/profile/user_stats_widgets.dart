@@ -1,7 +1,9 @@
 import 'package:do_host/bloc/user_stats_bloc/user_stats_bloc_bloc.dart';
+import 'package:do_host/configs/color/color.dart';
 import 'package:do_host/repository/response_api_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 class UserStatsWidget extends StatelessWidget {
   final String userId;
@@ -16,7 +18,12 @@ class UserStatsWidget extends StatelessWidget {
       child: BlocBuilder<UserStatsBloc, UserStatsState>(
         builder: (context, state) {
           if (state.loading) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(
+              child: SpinKitSpinningLines(
+                color: AppColors.buttonColor,
+                size: 50.0,
+              ),
+            );
           }
 
           final hasData = state.error == null;

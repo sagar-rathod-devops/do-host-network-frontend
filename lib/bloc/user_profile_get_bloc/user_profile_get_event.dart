@@ -5,7 +5,14 @@ abstract class UserProfileGetEvent extends Equatable {
   List<Object?> get props => [];
 }
 
-class UserProfileGetFetch extends UserProfileGetEvent {}
+class UserProfileGetFetch extends UserProfileGetEvent {
+  final String userId;
+
+  UserProfileGetFetch(this.userId);
+
+  @override
+  List<Object?> get props => [userId];
+}
 
 class UserProfileDeleted extends UserProfileGetEvent {
   final String userId;

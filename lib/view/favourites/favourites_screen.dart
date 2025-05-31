@@ -1,8 +1,10 @@
 import 'dart:convert';
 
+import 'package:do_host/configs/color/color.dart';
 import 'package:do_host/services/session_manager/session_controller.dart';
 import 'package:do_host/utils/app_url.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:http/http.dart' as http;
 
 import 'favourite_detail_screen.dart';
@@ -73,18 +75,18 @@ class _FavouritesScreenState extends State<FavouritesScreen> {
     return '${diff.inDays} days ago';
   }
 
-  Color getColorByType(String type) {
-    switch (type) {
-      case 'like':
-        return Colors.blue;
-      case 'comment':
-        return Colors.green;
-      case 'follow':
-        return Colors.purple;
-      default:
-        return Colors.grey;
-    }
-  }
+  // Color getColorByType(String type) {
+  //   switch (type) {
+  //     case 'like':
+  //       return Colors.blue;
+  //     case 'comment':
+  //       return Colors.green;
+  //     case 'follow':
+  //       return Colors.purple;
+  //     default:
+  //       return Colors.grey;
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -102,7 +104,12 @@ class _FavouritesScreenState extends State<FavouritesScreen> {
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
             child: isLoading
-                ? const Center(child: CircularProgressIndicator())
+                ? const Center(
+                    child: SpinKitSpinningLines(
+                      color: AppColors.buttonColor,
+                      size: 50.0,
+                    ),
+                  )
                 : notifications.isEmpty
                 ? const Center(child: Text('No notifications'))
                 : ListView.builder(
@@ -111,11 +118,12 @@ class _FavouritesScreenState extends State<FavouritesScreen> {
                       final notification = notifications[index];
                       return _buildFavouriteCard(
                         context,
+                        userId: notification['sender_user_id'],
                         description: notification['message'] ?? '',
                         timestamp: notification['created_at'] != null
                             ? formatTimeAgo(notification['created_at'])
                             : '',
-                        color: getColorByType(notification['type'] ?? ''),
+                        // color: getColorByType(notification['type'] ?? ''),
                       );
                     },
                   ),
@@ -129,7 +137,8 @@ class _FavouritesScreenState extends State<FavouritesScreen> {
     BuildContext context, {
     required String description,
     required String timestamp,
-    required Color color,
+    required String userId,
+    // required Color color,
   }) {
     return GestureDetector(
       onTap: () {
@@ -139,6 +148,7 @@ class _FavouritesScreenState extends State<FavouritesScreen> {
             builder: (context) => FavouriteDetailScreen(
               description: description,
               timestamp: timestamp,
+              userId: userId,
             ),
           ),
         );

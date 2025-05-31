@@ -1,7 +1,9 @@
 import 'package:do_host/bloc/post_all_job_get_bloc/post_all_job_get_bloc.dart';
 import 'package:do_host/configs/color/color.dart';
+import 'package:do_host/configs/components/internet_exception_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:intl/intl.dart';
 import 'package:readmore/readmore.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -71,9 +73,19 @@ class _JobsScreenState extends State<JobsScreen>
               previous.postAllJobGetList != current.postAllJobGetList,
           builder: (context, state) {
             if (state.postAllJobGetList.status == Status.loading) {
-              return const Center(child: CircularProgressIndicator());
+              return const Center(
+                child: SpinKitSpinningLines(
+                  color: AppColors.buttonColor,
+                  size: 50.0,
+                ),
+              );
             } else if (state.postAllJobGetList.status == Status.error) {
-              return const Center(child: Text("Failed to load jobs."));
+              return InterNetExceptionWidget(
+                onPress: () {
+                  // Add the logic to retry the API call or reload the content
+                  context.read<PostAllJobGetBloc>().add(PostAllJobGetFetch());
+                },
+              );
             } else if (state.postAllJobGetList.status == Status.completed) {
               final jobs = state.postAllJobGetList.data?.data ?? [];
               final today = DateTime.now();

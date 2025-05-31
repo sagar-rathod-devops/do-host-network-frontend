@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
 import 'package:do_host/model/post_content/post_content_model.dart';
@@ -14,7 +15,8 @@ class PostContentHttpApiRepository implements PostContentApiRepository {
   @override
   Future<PostContentModel> postContentApi(dynamic data) async {
     try {
-      final File? imageFile = data['media_url'];
+      final File? imageFile = data['media_file'];
+      final Uint8List? mediaBytes = data['media_bytes'];
       final String postContent = data['post_content'] ?? '';
 
       final token = await SessionController().getToken();
@@ -28,7 +30,7 @@ class PostContentHttpApiRepository implements PostContentApiRepository {
       );
       request.headers['Authorization'] = 'Bearer $token';
 
-      // Add multipart file if present
+      // 🔹 Add multipart file for mobile/desktop (File)
       if (imageFile != null) {
         final mimeType = lookupMimeType(imageFile.path)?.split('/');
         final mediaType = mimeType != null && mimeType.length == 2
@@ -44,7 +46,19 @@ class PostContentHttpApiRepository implements PostContentApiRepository {
         );
       }
 
-      // Add form fields
+      // 🔹 Add multipart bytes for web (Uint8List)
+      if (mediaBytes != null) {
+        request.files.add(
+          http.MultipartFile.fromBytes(
+            'media_url',
+            mediaBytes,
+            filename: 'upload.jpg',
+            contentType: MediaType('image', 'jpeg'),
+          ),
+        );
+      }
+
+      // 🔹 Add form fields
       request.fields['user_id'] = userId;
       request.fields['post_content'] = postContent;
 

@@ -21,16 +21,20 @@ class AppLocalizationsEs extends AppLocalizations {
   String get login => 'Acceso';
 
   @override
-  String get aCompleteValidEmailExamplejoegmailcom => 'Un correo electrónico completo y válido, por ejemplo, joe@gmail.com';
+  String get aCompleteValidEmailExamplejoegmailcom =>
+      'Un correo electrónico completo y válido, por ejemplo, joe@gmail.com';
 
   @override
-  String get pleaseEnsureTheEmailEnteredIsValid => 'Por favor, asegúrese de que el correo electrónico ingresado sea válido';
+  String get pleaseEnsureTheEmailEnteredIsValid =>
+      'Por favor, asegúrese de que el correo electrónico ingresado sea válido';
 
   @override
-  String get passwordShouldbeatleast_characterswithatleastoneletterandnumber => 'La contraseña debe tener al menos 8 caracteres con al menos una letra y un número';
+  String get passwordShouldbeatleast_characterswithatleastoneletterandnumber =>
+      'La contraseña debe tener al menos 8 caracteres con al menos una letra y un número';
 
   @override
-  String get passwordRequirements => 'La contraseña debe tener al menos 8 caracteres y contener al menos una letra y un número';
+  String get passwordRequirements =>
+      'La contraseña debe tener al menos 8 caracteres y contener al menos una letra y un número';
 
   @override
   String get submit => 'Enviar';

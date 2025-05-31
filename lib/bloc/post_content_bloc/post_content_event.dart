@@ -24,11 +24,13 @@ class PostContentChanged extends PostContentEvent {
 }
 
 class MediaUrlChanged extends PostContentEvent {
-  final File mediaFile;
-  const MediaUrlChanged({required this.mediaFile});
+  final io.File? mediaFile; // For mobile/desktop
+  final Uint8List? mediaBytes; // For web
+
+  const MediaUrlChanged({this.mediaFile, this.mediaBytes});
 
   @override
-  List<Object?> get props => [mediaFile];
+  List<Object?> get props => [mediaFile, mediaBytes];
 }
 
 class SubmitPostApi extends PostContentEvent {
