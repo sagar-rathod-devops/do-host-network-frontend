@@ -20,13 +20,15 @@ class UserStatsBloc extends Bloc<UserStatsEvent, UserStatsState> {
     try {
       final followers = await repository.getFollowersCount(event.userId);
       final followings = await repository.getFollowingsCount(event.userId);
-      final postsList = await repository.getUserPosts(event.userId);
+      final postsList = await repository.getUserPosts(event.userId) ?? [];
 
       int totalLikes = 0;
       int totalComments = 0;
 
       for (var post in postsList) {
         final postId = post['id'];
+        if (postId == null) continue; // defensive null check
+
         final likes = await repository.getPostLikesCount(postId);
         final comments = await repository.getPostCommentsCount(postId);
         totalLikes += likes;

@@ -29,21 +29,39 @@ class AllUserProfile {
 
   factory AllUserProfile.fromJson(Map<String, dynamic> json) {
     return AllUserProfile(
-      id: json['id'] ?? '',
-      userId: json['user_id'] ?? '',
-      profileImage: json['profile_image'],
-      fullName: json['full_name'] ?? '',
-      designation: json['designation'] ?? '',
-      organization: json['organization'] ?? '',
-      professionalSummary: json['professional_summary'] ?? '',
-      location: json['location'] ?? '',
-      email: json['email'] ?? '',
-      contactNumber: json['contact_number'] ?? '',
-      createdAt: json['created_at'] ?? '',
-      updatedAt: json['updated_at'] ?? '',
+      id: json['ID'] ?? '',
+      userId: json['UserID'] ?? '',
+      profileImage: json['ProfileImage'],
+      fullName: json['FullName'] ?? '',
+      designation: json['Designation'] ?? '',
+      organization: json['Organization'] ?? '',
+      professionalSummary: json['ProfessionalSummary'] ?? '',
+      location: json['Location'] ?? '',
+      email: json['Email'] ?? '',
+      contactNumber: json['ContactNumber'] ?? '',
+      createdAt: json['CreatedAt'] ?? '',
+      updatedAt: json['UpdatedAt'] ?? '',
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'ID': id,
+      'UserID': userId,
+      'ProfileImage': profileImage,
+      'FullName': fullName,
+      'Designation': designation,
+      'Organization': organization,
+      'ProfessionalSummary': professionalSummary,
+      'Location': location,
+      'Email': email,
+      'ContactNumber': contactNumber,
+      'CreatedAt': createdAt,
+      'UpdatedAt': updatedAt,
+    };
+  }
 }
+
 
 class AllUserProfileResponse {
   final List<AllUserProfile> profiles;

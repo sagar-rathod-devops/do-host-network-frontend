@@ -236,17 +236,41 @@ class _HomeScreenState extends State<HomeScreen> {
                                   children: [
                                     Row(
                                       children: [
-                                        CircleAvatar(
-                                          radius: 24,
-                                          backgroundImage:
-                                              (post.profileImage?.isNotEmpty ??
-                                                  false)
-                                              ? NetworkImage(post.profileImage!)
-                                              : const AssetImage(
+                                        SizedBox(
+                                          width: 48,
+                                          height: 48,
+                                          child: ClipOval(
+                                            child: Image.network(
+                                              post.profileImage ?? '',
+                                              fit: BoxFit.cover,
+                                              loadingBuilder:
+                                                  (
+                                                    context,
+                                                    child,
+                                                    loadingProgress,
+                                                  ) {
+                                                    if (loadingProgress == null)
+                                                      return child;
+                                                    return const Center(
+                                                      child:
+                                                          SpinKitSpinningLines(
+                                                            color: AppColors
+                                                                .buttonColor,
+                                                            size: 24.0,
+                                                          ),
+                                                    );
+                                                  },
+                                              errorBuilder:
+                                                  (context, error, stackTrace) {
+                                                    return Image.asset(
                                                       'assets/images/app_icon.png',
-                                                    )
-                                                    as ImageProvider,
+                                                      fit: BoxFit.cover,
+                                                    );
+                                                  },
+                                            ),
+                                          ),
                                         ),
+
                                         const SizedBox(width: 12),
                                         Column(
                                           crossAxisAlignment:

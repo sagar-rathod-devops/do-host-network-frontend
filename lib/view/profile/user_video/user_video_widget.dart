@@ -1,24 +1,28 @@
 import 'dart:io' show File;
-import 'package:do_host/configs/color/color.dart';
-import 'package:flutter/foundation.dart'; // For kIsWeb
-import 'package:do_host/repository/response_api_repository.dart';
-import 'package:do_host/utils/app_url.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:video_player/video_player.dart';
 
-import 'package:do_host/bloc/user_video_bloc/user_video_bloc.dart';
-import 'package:do_host/bloc/user_video_get_bloc/user_video_get_bloc.dart';
+import 'package:do_host/configs/color/color.dart';
 import 'package:do_host/data/response/status.dart';
 import 'package:do_host/services/session_manager/session_controller.dart';
+import 'package:do_host/repository/response_api_repository.dart';
+import 'package:do_host/utils/app_url.dart';
+import 'package:do_host/data/network/network_api_services.dart';
+import 'package:do_host/bloc/user_video_bloc/user_video_bloc.dart';
+import 'package:do_host/bloc/user_video_get_bloc/user_video_get_bloc.dart';
+import 'package:do_host/model/user_video_get/user_video_model.dart';
 
-import '../../../data/network/network_api_services.dart';
+extension FirstOrNullExtension<T> on List<T> {
+  T? get firstOrNull => isNotEmpty ? first : null;
+}
 
 class VideoAppBar extends StatefulWidget implements PreferredSizeWidget {
-  String? userId;
-  VideoAppBar({Key? key, required this.userId}) : super(key: key);
+  final String? userId;
+  const VideoAppBar({Key? key, required this.userId}) : super(key: key);
 
   @override
   State<VideoAppBar> createState() => _VideoAppBarState();
@@ -33,10 +37,10 @@ class _VideoAppBarState extends State<VideoAppBar> {
   final ImagePicker _picker = ImagePicker();
   String? _fetchedVideoUrl;
   bool _isLoading = false;
+  String? _currentVideoId;
 
-  String? _currentVideoId; // Store current video ID
   final NetworkApiService _apiService = NetworkApiService();
-  final responseApi = ResponseApiRepository(); // Your API repo instance
+  final responseApi = ResponseApiRepository();
 
   @override
   void initState() {
@@ -72,30 +76,35 @@ class _VideoAppBarState extends State<VideoAppBar> {
   }
 
   Future<void> _initializeControllerWithUrl(String url) async {
-    setState(() {
-      _isLoading = true;
-    });
-
+    setState(() => _isLoading = true);
     await _controller?.dispose();
+
     final newController = VideoPlayerController.network(url);
-    await newController.initialize();
 
-    newController.setLooping(true);
-    if (!mounted) return;
+    try {
+      await newController.initialize();
+      newController.setLooping(true);
 
-    setState(() {
-      _videoFile = null;
-      _controller = newController;
-      _fetchedVideoUrl = url;
-      _isLoading = false;
-    });
+      if (!mounted) return;
 
-    newController.play();
+      setState(() {
+        _videoFile = null;
+        _controller = newController;
+        _fetchedVideoUrl = url;
+        _isLoading = false;
+      });
+
+      newController.play();
+    } catch (e) {
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Failed to load video: $e")));
+    }
   }
 
   Future<void> _pickVideo(BuildContext context) async {
     if (kIsWeb) {
-      // Web: Not supported using File. Consider using network URL if needed.
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Video picking not supported on Web.")),
       );
@@ -117,11 +126,50 @@ class _VideoAppBarState extends State<VideoAppBar> {
     }
   }
 
+  Future<void> _deleteUserVideo(String videoId) async {
+    try {
+      final token = await SessionController().getToken();
+      if (token == null) throw Exception('No token found');
+
+      final url = "${AppUrl.baseUrl}/user/video/$videoId";
+      final headers = {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      };
+
+      await _apiService.deleteApi(url, headers: headers);
+
+      setState(() {
+        _videoFile = null;
+        _controller?.dispose();
+        _controller = null;
+        _fetchedVideoUrl = null;
+        _currentVideoId = null;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Video deleted successfully.")),
+      );
+
+      context.read<UserVideoGetBloc>().add(
+        UserVideoGetFetch(userId: widget.userId!),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Failed to delete video: $e")));
+    }
+  }
+
   void _togglePlayPause() {
     if (_controller == null || !_controller!.value.isInitialized) return;
     setState(() {
       _controller!.value.isPlaying ? _controller!.pause() : _controller!.play();
     });
+  }
+
+  void _updateCurrentVideoId(String? videoId) {
+    _currentVideoId = videoId;
   }
 
   Widget _buildVideoWidget() {
@@ -151,63 +199,22 @@ class _VideoAppBarState extends State<VideoAppBar> {
     );
   }
 
-  Future<void> _deleteUserVideo(String videoId) async {
-    try {
-      final token = await SessionController().getToken();
-      if (token == null) throw Exception('No token found');
-
-      final url = "${AppUrl.baseUrl}/user/video/$videoId";
-      final headers = {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      };
-
-      await _apiService.deleteApi(url, headers: headers);
-
-      // Clear UI after deletion
-      setState(() {
-        _videoFile = null;
-        _controller?.dispose();
-        _controller = null;
-        _fetchedVideoUrl = null;
-        _currentVideoId = null;
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Video deleted successfully.")),
-      );
-
-      // Refetch video data from backend
-      context.read<UserVideoGetBloc>().add(
-        UserVideoGetFetch(userId: widget.userId!),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Failed to delete video: $e")));
-    }
-  }
-
-  void _updateCurrentVideoId(String? videoId) {
-    _currentVideoId = videoId;
-  }
-
   @override
   Widget build(BuildContext context) {
     final isPlaying = _controller?.value.isPlaying ?? false;
 
     return BlocListener<UserVideoGetBloc, UserVideoGetState>(
       listenWhen: (prev, curr) =>
-          prev.userVideoGetList.data?.videoUrl !=
-              curr.userVideoGetList.data?.videoUrl ||
-          prev.userVideoGetList.data?.id != curr.userVideoGetList.data?.id,
+          prev.userVideoGetList.data?.firstOrNull?.videoUrl !=
+              curr.userVideoGetList.data?.firstOrNull?.videoUrl ||
+          prev.userVideoGetList.data?.firstOrNull?.id !=
+              curr.userVideoGetList.data?.firstOrNull?.id,
       listener: (context, getState) {
-        final videoUrl = getState.userVideoGetList.data?.videoUrl;
-        final videoId = getState.userVideoGetList.data?.id;
+        final video = getState.userVideoGetList.data?.firstOrNull;
 
-        if (videoUrl != null && videoUrl != _fetchedVideoUrl) {
-          _updateCurrentVideoId(videoId);
-          _initializeControllerWithUrl(videoUrl);
+        if (video != null && video.videoUrl != _fetchedVideoUrl) {
+          _updateCurrentVideoId(video.id);
+          _initializeControllerWithUrl(video.videoUrl);
         }
       },
       child: BlocConsumer<UserVideoBloc, UserVideoState>(

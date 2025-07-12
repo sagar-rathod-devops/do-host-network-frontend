@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:do_host/model/count_response_model.dart';
 import 'package:do_host/model/user_profile_get/user_profile_get_model.dart';
 import 'package:flutter/foundation.dart';
 
@@ -254,6 +255,32 @@ class ResponseApiRepository {
     return 0;
   }
 
+  Future<FollowersResponse> getFollowers(String userId) async {
+    try {
+      final token = await SessionController().getToken();
+      final url =
+          "${AppUrl.baseUrl}/user/$userId/followings"; // corrected endpoint
+      final headers = {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      };
+
+      final response = await _apiService.getApi(url, headers: headers);
+
+      if (response != null && response.containsKey('followings')) {
+        final followings = List<String>.from(response['followings']);
+        return FollowersResponse(
+          count: followings.length,
+          followers: followings,
+        );
+      }
+    } catch (e) {
+      debugPrint("Error fetching followings: $e");
+    }
+
+    return FollowersResponse(count: 0, followers: []);
+  }
+
   Future<int> getFollowingsCount(String userId) async {
     try {
       final token = await SessionController().getToken();
@@ -274,6 +301,31 @@ class ResponseApiRepository {
     return 0;
   }
 
+  Future<FollowingsResponse> getFollowings(String userId) async {
+    try {
+      final token = await SessionController().getToken();
+      final url = "${AppUrl.baseUrl}/user/$userId/followings";
+      final headers = {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      };
+
+      final response = await _apiService.getApi(url, headers: headers);
+
+      if (response != null && response.containsKey('followings')) {
+        final followings = List<String>.from(response['followings']);
+        return FollowingsResponse(
+          count: followings.length,
+          followings: followings,
+        );
+      }
+    } catch (e) {
+      debugPrint("Followings error: $e");
+    }
+
+    return FollowingsResponse(count: 0, followings: []);
+  }
+
   Future<List<dynamic>> getUserPosts(String userId) async {
     try {
       final token = await SessionController().getToken();
@@ -284,11 +336,17 @@ class ResponseApiRepository {
       };
 
       final response = await _apiService.getApi(url, headers: headers);
-      if (response is List) return response;
+
+      if (response is List) {
+        return response;
+      } else if (response is Map && response['message'] != null) {
+        // Log a readable warning
+        debugPrint("API message: ${response['message']}");
+      }
     } catch (e) {
       debugPrint("User posts error: $e");
     }
-    return [];
+    return []; // Fallback empty list
   }
 
   Future<int> getPostLikesCount(String postId) async {
@@ -388,16 +446,52 @@ class ResponseApiRepository {
       if (token == null) throw Exception('No token found');
 
       final url = "${AppUrl.baseUrl}/user/profile/delete/$userId";
-      debugPrint("DELETE URL: $url");
+      debugPrint("[DELETE] URL: $url");
 
       final headers = {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
       };
 
-      await _apiService.deleteApi(url, headers: headers);
+      // _apiService.deleteApi returns decoded JSON Map, not Response
+      final response = await _apiService.deleteApi(url, headers: headers);
+
+      debugPrint("[DELETE] Response Body: $response");
+
+      // Check your API response content for success indicator
+      if (response == null ||
+          response['message'] != 'User profile deleted successfully') {
+        throw Exception("Failed to delete profile: $response");
+      }
     } catch (e) {
+      debugPrint("[DELETE] Error: $e");
       rethrow;
     }
   }
+
+  //   Future<void> updateUserProfile(String userId, UserProfileRequest updatedProfile) async {
+  //   try {
+  //     final token = await SessionController().getToken();
+  //     if (token == null) throw Exception('No token found');
+
+  //     final url = "${AppUrl.baseUrl}/user/profile/update/$userId";
+
+  //     final headers = {
+  //       'Content-Type': 'application/json',
+  //       'Authorization': 'Bearer $token',
+  //     };
+
+  //     final body = jsonEncode(updatedProfile.toJson());
+
+  //     final response = await http
+  //         .put(Uri.parse(url), headers: headers, body: body)
+  //         .timeout(const Duration(seconds: 10));
+
+  //     if (response.statusCode != 200) {
+  //       throw Exception("Failed to update profile: ${response.body}");
+  //     }
+  //   } catch (e) {
+  //     throw Exception("Update error: $e");
+  //   }
+  // }
 }

@@ -191,19 +191,46 @@ class _SearchScreenState extends State<SearchScreen> {
                                                 crossAxisAlignment:
                                                     CrossAxisAlignment.start,
                                                 children: [
-                                                  CircleAvatar(
-                                                    radius: 30,
-                                                    backgroundImage:
-                                                        user.profileImage !=
-                                                            null
-                                                        ? NetworkImage(
-                                                            user.profileImage!,
-                                                          )
-                                                        : const AssetImage(
+                                                  SizedBox(
+                                                    width: 60,
+                                                    height: 60,
+                                                    child: ClipOval(
+                                                      child: Image.network(
+                                                        user.profileImage ?? '',
+                                                        fit: BoxFit.cover,
+                                                        loadingBuilder:
+                                                            (
+                                                              context,
+                                                              child,
+                                                              loadingProgress,
+                                                            ) {
+                                                              if (loadingProgress ==
+                                                                  null)
+                                                                return child;
+                                                              return const Center(
+                                                                child: SpinKitSpinningLines(
+                                                                  color: AppColors
+                                                                      .buttonColor,
+                                                                  size: 24.0,
+                                                                ),
+                                                              );
+                                                            },
+                                                        errorBuilder:
+                                                            (
+                                                              context,
+                                                              error,
+                                                              stackTrace,
+                                                            ) {
+                                                              return Image.asset(
                                                                 'assets/images/app_icon.png',
-                                                              )
-                                                              as ImageProvider,
+                                                                fit: BoxFit
+                                                                    .cover,
+                                                              );
+                                                            },
+                                                      ),
+                                                    ),
                                                   ),
+
                                                   const SizedBox(width: 16),
                                                   Expanded(
                                                     child: Column(

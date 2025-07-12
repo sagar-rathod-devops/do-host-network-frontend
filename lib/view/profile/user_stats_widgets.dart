@@ -1,6 +1,9 @@
 import 'package:do_host/bloc/user_stats_bloc/user_stats_bloc_bloc.dart';
 import 'package:do_host/configs/color/color.dart';
 import 'package:do_host/repository/response_api_repository.dart';
+import 'package:do_host/services/session_manager/session_controller.dart';
+import 'package:do_host/view/followers/get_followers.dart';
+import 'package:do_host/view/followers/get_following.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
@@ -47,13 +50,35 @@ class UserStatsWidget extends StatelessWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
-                        _buildStatCard(
-                          "Followers",
-                          hasData ? state.followers : 0,
+                        GestureDetector(
+                          onTap: () {
+                            // Call your function for "Followers" here
+                            // Navigator.push(
+                            //   context,
+                            //   MaterialPageRoute(
+                            //     builder: (_) => GetFollowers(userId: userId),
+                            //   ),
+                            // ); // Example function
+                          },
+                          child: _buildStatCard(
+                            "Followers",
+                            hasData ? state.followers : 0,
+                          ),
                         ),
-                        _buildStatCard(
-                          "Following",
-                          hasData ? state.followings : 0,
+                        GestureDetector(
+                          onTap: () {
+                            // Call your function for "Following" here
+                            // Navigator.push(
+                            //   context,
+                            //   MaterialPageRoute(
+                            //     builder: (_) => GetFollowings(userId: userId),
+                            //   ),
+                            // ); // Example function
+                          },
+                          child: _buildStatCard(
+                            "Following",
+                            hasData ? state.followings : 0,
+                          ),
                         ),
                       ],
                     ),

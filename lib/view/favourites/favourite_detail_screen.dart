@@ -189,169 +189,182 @@ class _FavouriteDetailScreenState extends State<FavouriteDetailScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Padding(padding: const EdgeInsets.all(8.0)),
-                        Card(
-                          color: Colors.white,
-                          margin: const EdgeInsets.symmetric(
-                            horizontal: 5,
-                            vertical: 2,
-                          ),
-                          elevation: 3,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Stack(
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.all(16.0),
-                                child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    CircleAvatar(
-                                      radius: 30,
-                                      backgroundImage:
-                                          user?.profileImage != null
-                                          ? NetworkImage(user!.profileImage!)
-                                          : const AssetImage(
-                                                  'assets/images/app_icon.png',
-                                                )
-                                                as ImageProvider,
-                                    ),
-                                    const SizedBox(width: 16),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            user!.fullName,
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 16,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 4),
-                                          Text(
-                                            user.designation,
-                                            style: const TextStyle(
-                                              fontSize: 14,
-                                              color: Colors.black54,
-                                            ),
-                                          ),
-                                          Text(
-                                            user.organization,
-                                            style: const TextStyle(
-                                              fontSize: 14,
-                                              color: Colors.black54,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 6),
-                                          ReadMoreText(
-                                            user.professionalSummary,
-                                            trimLines: 3,
-                                            trimMode: TrimMode.Line,
-                                            trimCollapsedText: 'Show more',
-                                            trimExpandedText: 'Show less',
-                                            colorClickableText:
-                                                AppColors.buttonColor,
-                                            style: const TextStyle(
-                                              fontSize: 14,
-                                            ),
-                                            moreStyle: const TextStyle(
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.bold,
-                                              color: AppColors.buttonColor,
-                                            ),
-                                            lessStyle: const TextStyle(
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.bold,
-                                              color: AppColors.buttonColor,
-                                            ),
-                                          ),
-                                        ],
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => SearchUserDetailsScreen(
+                                  userId: user.userId,
+                                ),
+                              ),
+                            );
+                          },
+                          child: Card(
+                            color: Colors.white,
+                            margin: const EdgeInsets.symmetric(
+                              horizontal: 5,
+                              vertical: 2,
+                            ),
+                            elevation: 3,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Stack(
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.all(16.0),
+                                  child: Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      CircleAvatar(
+                                        radius: 30,
+                                        backgroundImage:
+                                            user?.profileImage != null
+                                            ? NetworkImage(user!.profileImage!)
+                                            : const AssetImage(
+                                                    'assets/images/app_icon.png',
+                                                  )
+                                                  as ImageProvider,
                                       ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Positioned(
-                                top: 12,
-                                right: 12,
-                                child: ElevatedButton.icon(
-                                  icon: Icon(
-                                    isFollowing
-                                        ? Icons.check
-                                        : Icons.person_add,
-                                    size: 18,
-                                    color: Colors.white,
-                                  ),
-                                  label: Text(
-                                    isFollowing ? 'Following' : 'Follow',
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: isFollowing
-                                        ? Colors.grey
-                                        : AppColors.buttonColor,
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 10,
-                                      vertical: 6,
-                                    ),
-                                    minimumSize: const Size(80, 32),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(15),
-                                    ),
-                                  ),
-                                  onPressed: () async {
-                                    final currentUserFullName =
-                                        SessionController.user.fullName;
-
-                                    if (currentUserFullName.trim().isEmpty) {
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        const SnackBar(
-                                          content: Text(
-                                            "Please update your profile with your full name before following users.",
-                                          ),
+                                      const SizedBox(width: 16),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              user!.fullName,
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 16,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              user.designation,
+                                              style: const TextStyle(
+                                                fontSize: 14,
+                                                color: Colors.black54,
+                                              ),
+                                            ),
+                                            Text(
+                                              user.organization,
+                                              style: const TextStyle(
+                                                fontSize: 14,
+                                                color: Colors.black54,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 6),
+                                            ReadMoreText(
+                                              user.professionalSummary,
+                                              trimLines: 3,
+                                              trimMode: TrimMode.Line,
+                                              trimCollapsedText: 'Show more',
+                                              trimExpandedText: 'Show less',
+                                              colorClickableText:
+                                                  AppColors.buttonColor,
+                                              style: const TextStyle(
+                                                fontSize: 14,
+                                              ),
+                                              moreStyle: const TextStyle(
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.bold,
+                                                color: AppColors.buttonColor,
+                                              ),
+                                              lessStyle: const TextStyle(
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.bold,
+                                                color: AppColors.buttonColor,
+                                              ),
+                                            ),
+                                          ],
                                         ),
-                                      );
-                                      return;
-                                    }
-
-                                    if (isFollowing) {
-                                      await responseApi.unfollowUser(
-                                        user.userId ?? '',
-                                      );
-                                      await responseApi.sendNotification(
-                                        receiverId: user.userId ?? '',
-                                        message:
-                                            "$currentUserFullName has unfollowed you.",
-                                        type: "unfollow",
-                                      );
-                                      setState(() {
-                                        _followedUserIds.remove(user.userId);
-                                      });
-                                    } else {
-                                      await responseApi.followUser(
-                                        user.userId ?? '',
-                                      );
-                                      await responseApi.sendNotification(
-                                        receiverId: user.userId ?? '',
-                                        message:
-                                            "$currentUserFullName started following you.",
-                                        type: "follow",
-                                      );
-                                      setState(() {
-                                        _followedUserIds.add(user.userId ?? '');
-                                      });
-                                    }
-                                  },
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                            ],
+                                // Positioned(
+                                //   top: 12,
+                                //   right: 12,
+                                //   child: ElevatedButton.icon(
+                                //     icon: Icon(
+                                //       isFollowing
+                                //           ? Icons.check
+                                //           : Icons.person_add,
+                                //       size: 18,
+                                //       color: Colors.white,
+                                //     ),
+                                //     label: Text(
+                                //       isFollowing ? 'Following' : 'Follow',
+                                //       style: const TextStyle(
+                                //         fontSize: 12,
+                                //         color: Colors.white,
+                                //       ),
+                                //     ),
+                                //     style: ElevatedButton.styleFrom(
+                                //       backgroundColor: isFollowing
+                                //           ? Colors.grey
+                                //           : AppColors.buttonColor,
+                                //       padding: const EdgeInsets.symmetric(
+                                //         horizontal: 10,
+                                //         vertical: 6,
+                                //       ),
+                                //       minimumSize: const Size(80, 32),
+                                //       shape: RoundedRectangleBorder(
+                                //         borderRadius: BorderRadius.circular(15),
+                                //       ),
+                                //     ),
+                                //     onPressed: () async {
+                                //       final currentUserFullName =
+                                //           SessionController.user.fullName;
+
+                                //       if (currentUserFullName.trim().isEmpty) {
+                                //         ScaffoldMessenger.of(
+                                //           context,
+                                //         ).showSnackBar(
+                                //           const SnackBar(
+                                //             content: Text(
+                                //               "Please update your profile with your full name before following users.",
+                                //             ),
+                                //           ),
+                                //         );
+                                //         return;
+                                //       }
+
+                                //       if (isFollowing) {
+                                //         await responseApi.unfollowUser(
+                                //           user.userId ?? '',
+                                //         );
+                                //         await responseApi.sendNotification(
+                                //           receiverId: user.userId ?? '',
+                                //           message:
+                                //               "$currentUserFullName has unfollowed you.",
+                                //           type: "unfollow",
+                                //         );
+                                //         setState(() {
+                                //           _followedUserIds.remove(user.userId);
+                                //         });
+                                //       } else {
+                                //         await responseApi.followUser(
+                                //           user.userId ?? '',
+                                //         );
+                                //         await responseApi.sendNotification(
+                                //           receiverId: user.userId ?? '',
+                                //           message:
+                                //               "$currentUserFullName started following you.",
+                                //           type: "follow",
+                                //         );
+                                //         setState(() {
+                                //           _followedUserIds.add(user.userId ?? '');
+                                //         });
+                                //       }
+                                //     },
+                                //   ),
+                                // ),
+                              ],
+                            ),
                           ),
                         ),
                         Expanded(

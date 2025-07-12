@@ -1,4 +1,5 @@
 import 'package:do_host/bloc/user_experience_get_bloc/user_experience_get_bloc.dart';
+import 'package:do_host/bloc/user_profile_bloc/user_profile_bloc.dart';
 import 'package:do_host/bloc/user_video_bloc/user_video_bloc.dart';
 import 'package:do_host/bloc/user_video_get_bloc/user_video_get_bloc.dart';
 import 'package:do_host/configs/color/color.dart';
@@ -300,7 +301,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       if (state.userExperienceGetList.status == Status.error) {
                         return _buildAddUserExperienceCard(
                           context,
-                          "Something went wrong!",
+                          "No Experience Data Available",
                           Icons.error_outline,
                         );
                       }
@@ -481,9 +482,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _buildUserProfileCard(profile) {
     return FutureBuilder<String?>(
-      future: SessionController().getFullName(), // ✅ Get full name
+      future: SessionController().getFullName(),
       builder: (context, snapshot) {
-        final loggedInFullName = snapshot.data ?? '';
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasError) {
+          return const Text("Error loading session");
+        }
+
+        final loggedInFullName = snapshot.data ?? "";
 
         return Padding(
           padding: const EdgeInsets.all(8.0),
@@ -571,7 +578,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 ),
                                 const SizedBox(height: 4),
 
-                                /// 👇 Show Logged-in Full Name (Optional Section)
+                                /// 👇 Show Logged-in Full Name
                                 if (loggedInFullName.isNotEmpty)
                                   Text(
                                     "Logged in as: $loggedInFullName",
@@ -654,19 +661,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
               ),
-
-              // Delete button
               Positioned(
                 top: 12,
                 right: 12,
                 child: GestureDetector(
                   onTap: () async {
-                    final shouldDelete = await showDialog<bool>(
+                    final shouldUpdate = await showDialog<bool>(
                       context: context,
                       builder: (context) => AlertDialog(
-                        title: const Text("Delete Profile"),
+                        title: const Text("Update Profile"),
                         content: const Text(
-                          "Are you sure you want to delete this profile?",
+                          "Are you sure you want to update this profile?",
                         ),
                         actions: [
                           TextButton(
@@ -676,45 +681,96 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ElevatedButton(
                             onPressed: () => Navigator.pop(context, true),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.red,
+                              backgroundColor: Colors.blue,
                             ),
-                            child: const Text("Delete"),
+                            child: const Text("Update"),
                           ),
                         ],
                       ),
                     );
 
-                    if (shouldDelete == true) {
-                      try {
-                        await SessionController().clearFullName();
-                        await responseApi.deleteUserProfile(profile.userId);
-                        setState(() {});
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text("Profile deleted successfully"),
-                          ),
-                        );
-                      } catch (e) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              "Error deleting profile: ${e.toString()}",
-                            ),
-                          ),
-                        );
-                      }
+                    if (shouldUpdate == true) {
+                      // Navigate to the profile update screen with the given userId
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              UserProfileUpdateWidget(userId: widget.userId),
+                        ),
+                      );
                     }
                   },
                   child: Container(
                     padding: const EdgeInsets.all(6),
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Colors.red.withOpacity(0.1),
+                      color: Colors.blue.withOpacity(0.1),
                     ),
-                    child: const Icon(Icons.delete, color: Colors.red),
+                    child: const Icon(Icons.edit, color: Colors.blue),
                   ),
                 ),
               ),
+
+              // Delete button
+              // Positioned(
+              //   top: 12,
+              //   right: 12,
+              //   child: GestureDetector(
+              //     onTap: () async {
+              //       final shouldDelete = await showDialog<bool>(
+              //         context: context,
+              //         builder: (context) => AlertDialog(
+              //           title: const Text("Delete Profile"),
+              //           content: const Text(
+              //             "Are you sure you want to delete this profile?",
+              //           ),
+              //           actions: [
+              //             TextButton(
+              //               onPressed: () => Navigator.pop(context, false),
+              //               child: const Text("Cancel"),
+              //             ),
+              //             ElevatedButton(
+              //               onPressed: () => Navigator.pop(context, true),
+              //               style: ElevatedButton.styleFrom(
+              //                 backgroundColor: Colors.red,
+              //               ),
+              //               child: const Text("Delete"),
+              //             ),
+              //           ],
+              //         ),
+              //       );
+
+              //       if (shouldDelete == true) {
+              //         try {
+              //           await SessionController().clearFullName();
+              //           await responseApi.deleteUserProfile(profile.userId);
+              //           setState(() {});
+              //           ScaffoldMessenger.of(context).showSnackBar(
+              //             const SnackBar(
+              //               content: Text("Profile deleted successfully"),
+              //             ),
+              //           );
+              //         } catch (e) {
+              //           ScaffoldMessenger.of(context).showSnackBar(
+              //             SnackBar(
+              //               content: Text(
+              //                 "Error deleting profile: ${e.toString()}",
+              //               ),
+              //             ),
+              //           );
+              //         }
+              //       }
+              //     },
+              //     child: Container(
+              //       padding: const EdgeInsets.all(6),
+              //       decoration: BoxDecoration(
+              //         shape: BoxShape.circle,
+              //         color: Colors.red.withOpacity(0.1),
+              //       ),
+              //       child: const Icon(Icons.delete, color: Colors.red),
+              //     ),
+              //   ),
+              // ),
             ],
           ),
         );

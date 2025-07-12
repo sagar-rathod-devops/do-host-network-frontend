@@ -1,12 +1,12 @@
 part of 'user_video_get_bloc.dart';
 
 class UserVideoGetState extends Equatable {
-  final ApiResponse<UserVideoResponse> userVideoGetList;
+  final ApiResponse<List<UserVideoResponse>> userVideoGetList;
 
   const UserVideoGetState({required this.userVideoGetList});
 
   UserVideoGetState copyWith({
-    ApiResponse<UserVideoResponse>? userVideoGetList,
+    ApiResponse<List<UserVideoResponse>>? userVideoGetList,
   }) {
     return UserVideoGetState(
       userVideoGetList: userVideoGetList ?? this.userVideoGetList,

@@ -31,7 +31,7 @@ class LoginBloc extends Bloc<LoginEvents, LoginStates> {
     Emitter<LoginStates> emit,
   ) async {
     Map<String, String> data = {
-      'identifier': state.email,
+      'emailOrUsername': state.email,
       'password': state.password,
     };
 

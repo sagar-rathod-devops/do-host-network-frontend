@@ -27,43 +27,42 @@ class UserProfileResponse {
     this.updatedAt,
   });
 
+  /// ✅ Corrected mapping with backend capitalized JSON keys
   factory UserProfileResponse.fromJson(Map<String, dynamic> json) {
     return UserProfileResponse(
-      id:
-          json['id']
-              as String?, // <-- Lowercase keys for JSON snake_case or camelCase
-      userId: json['user_id'] as String?,
-      profileImage: json['profile_image'] as String?,
-      fullName: json['full_name'] as String?,
-      designation: json['designation'] as String?,
-      organization: json['organization'] as String?,
-      professionalSummary: json['professional_summary'] as String?,
-      location: json['location'] as String?,
-      email: json['email'] as String?,
-      contactNumber: json['contact_number'] as String?,
-      createdAt: json['created_at'] != null
-          ? DateTime.tryParse(json['created_at'])
+      id: json['ID'] as String?,
+      userId: json['UserID'] as String?,
+      profileImage: json['ProfileImage'] as String?,
+      fullName: json['FullName'] as String?,
+      designation: json['Designation'] as String?,
+      organization: json['Organization'] as String?,
+      professionalSummary: json['ProfessionalSummary'] as String?,
+      location: json['Location'] as String?,
+      email: json['Email'] as String?,
+      contactNumber: json['ContactNumber'] as String?,
+      createdAt: json['CreatedAt'] != null
+          ? DateTime.tryParse(json['CreatedAt'])
           : null,
-      updatedAt: json['updated_at'] != null
-          ? DateTime.tryParse(json['updated_at'])
+      updatedAt: json['UpdatedAt'] != null
+          ? DateTime.tryParse(json['UpdatedAt'])
           : null,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
-      'user_id': userId,
-      'profile_image': profileImage,
-      'full_name': fullName,
-      'designation': designation,
-      'organization': organization,
-      'professional_summary': professionalSummary,
-      'location': location,
-      'email': email,
-      'contact_number': contactNumber,
-      'created_at': createdAt?.toIso8601String(),
-      'updated_at': updatedAt?.toIso8601String(),
+      'ID': id,
+      'UserID': userId,
+      'ProfileImage': profileImage,
+      'FullName': fullName,
+      'Designation': designation,
+      'Organization': organization,
+      'ProfessionalSummary': professionalSummary,
+      'Location': location,
+      'Email': email,
+      'ContactNumber': contactNumber,
+      'CreatedAt': createdAt?.toIso8601String(),
+      'UpdatedAt': updatedAt?.toIso8601String(),
     };
   }
 
